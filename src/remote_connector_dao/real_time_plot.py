@@ -2,8 +2,10 @@ from functools import partial
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from remote_connector_dao.get_signal import get_count_rates
+from remote_connector_dao.constants import GRAPH_ANIMATION_INTERVAL
 
 CHANNEL1_COUNTS, CHANNEL2_COUNTS, COINCIDENCES, ELAPSED_TIME = [0], [0], [0], [0]
+plt.style.use("src/remote_connector_dao/styles/graphsStyle.mplstyle")
 
 
 def update_data(timetagger_proxy, timetagger_controller, channels_list):
@@ -38,18 +40,12 @@ def animate(
     )
 
     graph1_object.cla()
-    graph1_object.plot(elapsed_time, channel1_data, label="1", marker="o", color="r")
-    graph1_object.plot(elapsed_time, channel2_data, label="2", marker="s", color="b")
-    graph1_object.grid(axis="y", linewidth=1, alpha=0.6, linestyle='--')
-    graph1_object.margins(x=0)
-    graph1_object.legend(loc="upper right")
+    graph1_object.plot(elapsed_time, channel1_data, label="1")
+    graph1_object.plot(elapsed_time, channel2_data, label="2")
+    graph1_object.autoscale_view()
 
     graph2_object.cla()
-    graph2_object.plot(
-        elapsed_time, coincidences_data, label="CC", marker="^", color="k"
-    )
-    graph2_object.grid(axis="y", linewidth=1, alpha=0.6, linestyle='--')
-    graph2_object.margins(x=0)
+    graph2_object.plot(elapsed_time, coincidences_data, label="CC")
     graph2_object.legend(loc="upper right")
     plt.tight_layout()
 
@@ -67,7 +63,7 @@ def plot_real_time_graph(timetagger_proxy, timetagger_controller, channels_list)
             graph1_object=ax1,
             graph2_object=ax2,
         ),
-        interval=500,
+        interval=GRAPH_ANIMATION_INTERVAL,
     )
     plt.tight_layout()
     plt.show()
