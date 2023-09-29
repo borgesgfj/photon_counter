@@ -17,8 +17,24 @@ class SignalCounter:
         self.coincidences.append(coincidences_instant_signal)
         self.elapsed_time.append(previous_elapsed_time + 1)
 
-        if len(self.elapsed_time) > 100:
+        if len(self.elapsed_time) > 50:
             self.channel1.pop(0)
             self.channel2.pop(0)
             self.coincidences.pop(0)
             self.elapsed_time.pop(0)
+
+    @property
+    def single_channels_max_value(self):
+        return max(self.channel1 + self.channel2, default=0)
+
+    @property
+    def coincidences_max_value(self):
+        return max(self.coincidences, default=0)
+
+    @property
+    def single_channels_min_value(self):
+        return min(self.channel1 + self.channel2, default=0)
+
+    @property
+    def coincidences_min_value(self):
+        return min(self.coincidences, default=0)

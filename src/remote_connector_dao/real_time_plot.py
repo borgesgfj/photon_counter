@@ -3,7 +3,6 @@ from matplotlib.animation import FuncAnimation
 from remote_connector_dao.get_signal import get_count_rates
 from remote_connector_dao.constants import GRAPH_ANIMATION_INTERVAL
 from remote_connector_dao.SignalCounter import SignalCounter
-from remote_connector_dao.helpers import calculate_graphs_vertical_axis_limit
 
 plt.style.use("src/remote_connector_dao/styles/graphsStyle.mplstyle")
 
@@ -29,24 +28,17 @@ def plot(
     signal_counter: SignalCounter,
 ):
     elapsed_time = signal_counter.elapsed_time
-    vertical_axis_limits = calculate_graphs_vertical_axis_limit(signal_counter)
 
     graph1_object.cla()
     graph1_object.plot(elapsed_time, signal_counter.channel1, label="1")
     graph1_object.plot(elapsed_time, signal_counter.channel2, label="2")
     graph1_object.legend(loc="upper right")
-    graph1_object.set_ylim(
-        vertical_axis_limits["single_counts_axis_min"],
-        vertical_axis_limits["single_counts_axis_max"],
-    )
+    graph1_object.margins(y=0.1)
 
     graph2_object.cla()
     graph2_object.plot(elapsed_time, signal_counter.coincidences, label="CC")
+    graph2_object.margins(y=0.1)
     graph2_object.legend(loc="upper right")
-    graph2_object.set_ylim(
-        vertical_axis_limits["coincidences_axis_min"],
-        vertical_axis_limits["coincidences_axis_max"],
-    )
     plt.tight_layout()
 
 
