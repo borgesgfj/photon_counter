@@ -1,0 +1,21 @@
+axes.prop_cycle: (cycler('color', ['1879CE', 'FC4F30', '4AD23E', '1A1918', 'D1810A', '9871B8']) + cycler('marker', ['o', 's', '^', '+', 'd', 'p']))
+
+# Grid style
+axes.grid: true
+axes.grid.axis: y
+grid.linewidth: 1
+grid.alpha: 0.6
+grid.linestyle: --
+grid.color: A5A5A5
+axes.grid.which: both
+axes.axisbelow: True
+
+# Legend Styling
+legend.framealpha: 1
+
+# Set Graph margins
+axes.xmargin: 0
+axes.ymargin: 0
+
+# Set minor ticks on vertical axis
+ytick.minor.visible: True
