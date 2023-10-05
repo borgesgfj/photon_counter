@@ -18,7 +18,7 @@ def run_real_time_graph():
         timetagger_proxy, tagger_controller, single_channels_list
     )
 
-    signal_counter = SignalCounter()
+    # signal_counter = SignalCounter()
 
     channels = [*single_channels_list, coincidences_virtual_channel.getChannels()[0]]
 
@@ -26,7 +26,7 @@ def run_real_time_graph():
         tagger_controller.setTriggerLevel(channel, TRIGGER_VOLTAGE)
 
     app = QtWidgets.QApplication(sys.argv)
-    window = MainWindow(signal_counter, timetagger_proxy, tagger_controller, channels)
+    window = MainWindow(timetagger_proxy, tagger_controller, channels)
 
     window.show()
     app.exec()
