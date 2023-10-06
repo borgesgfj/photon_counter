@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets
 import sys
+from PyQt5 import QtWidgets
 from remote_connector_dao.remote_connector_dao import connect_to_server
 from remote_connector_dao.real_time_plot import plot_real_time_graph
 from remote_connector_dao.constants import TRIGGER_VOLTAGE

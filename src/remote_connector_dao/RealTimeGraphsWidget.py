@@ -4,18 +4,24 @@ import pyqtgraph as pg
 from remote_connector_dao.SignalCounter import SignalCounter
 from remote_connector_dao.get_signal import get_count_rates
 from remote_connector_dao.constants import GRAPH_ANIMATION_INTERVAL
-from remote_connector_dao.app_styles import *
+from remote_connector_dao.app_styles import (
+    colors,
+    graph_line_style,
+    axis_label_style,
+    graph_title_style,
+)
 
 
 class RealTimeGraphsWidget(QWidget):
     def __init__(
         self,
+        signal_counter: SignalCounter,
         timetagger_proxy,
         timetagger_controller,
         channels,
     ):
         super().__init__()
-        self.signal_counter = SignalCounter()
+        self.signal_counter = signal_counter
         self.channels_list = channels
         self.timetagger_proxy = timetagger_proxy
         self.timetagger_controller = timetagger_controller
@@ -23,12 +29,6 @@ class RealTimeGraphsWidget(QWidget):
         self.single_counts_graph_widget = pg.PlotWidget()
         self.coincidences_graph_widget = pg.PlotWidget()
         self._set_graph_widget_style()
-
-        self.elapsed_time = self.signal_counter.elapsed_time
-        self.channel1_counts = self.signal_counter.channel1
-        self.channel2_counts = self.signal_counter.channel2
-        self.coincidences = self.signal_counter.coincidences
-
         self._set_single_counts_graph_lines()
         self._set_coincidences_graph_lines()
 
@@ -39,9 +39,15 @@ class RealTimeGraphsWidget(QWidget):
     def _update_plot_data(self):
         self._update_counts()
 
-        self.channel1_data_line.setData(self.elapsed_time, self.channel1_counts)
-        self.channel2_data_line.setData(self.elapsed_time, self.channel2_counts)
-        self.coincidences_data_line.setData(self.elapsed_time, self.coincidences)
+        self.channel1_data_line.setData(
+            self.signal_counter.elapsed_time, self.signal_counter.channel1
+        )
+        self.channel2_data_line.setData(
+            self.signal_counter.elapsed_time, self.signal_counter.channel2
+        )
+        self.coincidences_data_line.setData(
+            self.signal_counter.elapsed_time, self.signal_counter.coincidences
+        )
 
     def _update_counts(self):
         channel1, channel2, coincidences = get_count_rates(
@@ -53,8 +59,8 @@ class RealTimeGraphsWidget(QWidget):
     def _set_single_counts_graph_lines(self):
         channel1_line_pen = pg.mkPen(color=colors["red_primary"], **graph_line_style)
         self.channel1_data_line = self.single_counts_graph_widget.plot(
-            self.elapsed_time,
-            self.channel1_counts,
+            self.signal_counter.elapsed_time,
+            self.signal_counter.channel1,
             name="ch.1",
             pen=channel1_line_pen,
             symbol="s",
@@ -65,8 +71,8 @@ class RealTimeGraphsWidget(QWidget):
         channel2_line_pen = pg.mkPen(color=colors["blue_primary"], **graph_line_style)
 
         self.channel2_data_line = self.single_counts_graph_widget.plot(
-            self.elapsed_time,
-            self.channel2_counts,
+            self.signal_counter.elapsed_time,
+            self.signal_counter.channel2,
             name="ch.2",
             pen=channel2_line_pen,
             symbol="o",
@@ -77,8 +83,8 @@ class RealTimeGraphsWidget(QWidget):
     def _set_coincidences_graph_lines(self):
         cc_12_line_pen = pg.mkPen(color=colors["red_primary"], **graph_line_style)
         self.coincidences_data_line = self.coincidences_graph_widget.plot(
-            self.elapsed_time,
-            self.coincidences,
+            self.signal_counter.elapsed_time,
+            self.signal_counter.coincidences,
             name="1-2",
             pen=cc_12_line_pen,
             symbol="s",
@@ -106,9 +112,11 @@ class RealTimeGraphsWidget(QWidget):
         )
         self.single_counts_graph_widget.addLegend(offset=(10, 10))
         self.single_counts_graph_widget.showGrid(x=True, y=True)
+        self.single_counts_graph_widget.setMouseEnabled(x=False, y=True)
 
         self.coincidences_graph_widget.setBackground(colors["white_primary"])
         self.coincidences_graph_widget.setTitle("Coincidences", **graph_title_style)
         self.coincidences_graph_widget.setLabel("left", "CC/s", **axis_label_style)
         self.coincidences_graph_widget.addLegend(offset=(10, 10))
         self.coincidences_graph_widget.showGrid(x=True, y=True)
+        self.coincidences_graph_widget.setMouseEnabled(x=False, y=True)
