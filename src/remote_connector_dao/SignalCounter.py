@@ -17,7 +17,7 @@ class SignalCounter:
         self.coincidences.append(coincidences_instant_signal)
         self.elapsed_time.append(previous_elapsed_time + 1)
 
-        if len(self.elapsed_time) > 50:
+        if len(self.elapsed_time) > 100:
             self.channel1.pop(0)
             self.channel2.pop(0)
             self.coincidences.pop(0)
