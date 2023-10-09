@@ -1,14 +1,11 @@
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
-import pyqtgraph as pg
 from remote_connector_dao.SignalCounter import SignalCounter
 from remote_connector_dao.get_signal import get_count_rates
 from remote_connector_dao.constants import GRAPH_ANIMATION_INTERVAL
+from remote_connector_dao.GraphWidget2D import GraphWidget2D
 from remote_connector_dao.app_styles import (
     colors,
-    graph_line_style,
-    axis_label_style,
-    graph_title_style,
 )
 
 
@@ -26,28 +23,46 @@ class RealTimeGraphsWidget(QWidget):
         self.timetagger_proxy = timetagger_proxy
         self.timetagger_controller = timetagger_controller
 
-        self.single_counts_graph_widget = pg.PlotWidget()
-        self.coincidences_graph_widget = pg.PlotWidget()
-        self._set_graph_widget_style()
-        self._set_single_counts_graph_lines()
-        self._set_coincidences_graph_lines()
+        self.single_counts_graph = GraphWidget2D(
+            number_of_lines=2,
+            graph_lines_data=[
+                [signal_counter.elapsed_time, signal_counter.channel1],
+                [signal_counter.elapsed_time, signal_counter.channel2],
+            ],
+            background_color=colors["white_primary"],
+            vertical_axis_label="Counts / s",
+            graph_title="Single Counts",
+            graph_line_labels_list=["ch.1", "ch.2"],
+        )
 
-        self.update_graph_event()
+        self.coincidences_graph = GraphWidget2D(
+            number_of_lines=1,
+            graph_lines_data=[
+                [signal_counter.elapsed_time, signal_counter.coincidences]
+            ],
+            background_color=colors["white_primary"],
+            vertical_axis_label="Coincidences / s",
+            graph_title="Coincidences",
+            graph_line_labels_list=["1-2"],
+        )
+
+        self._update_graph_event()
 
         self._configure_layout()
 
-    def _update_plot_data(self):
+    def _update_plots(self):
         self._update_counts()
+        new_single_counts_data = [
+            [self.signal_counter.elapsed_time, self.signal_counter.channel1],
+            [self.signal_counter.elapsed_time, self.signal_counter.channel2],
+        ]
 
-        self.channel1_data_line.setData(
-            self.signal_counter.elapsed_time, self.signal_counter.channel1
-        )
-        self.channel2_data_line.setData(
-            self.signal_counter.elapsed_time, self.signal_counter.channel2
-        )
-        self.coincidences_data_line.setData(
-            self.signal_counter.elapsed_time, self.signal_counter.coincidences
-        )
+        new_coincidence_count_data = [
+            [self.signal_counter.elapsed_time, self.signal_counter.coincidences]
+        ]
+
+        self.single_counts_graph.update_lines_data(new_single_counts_data)
+        self.coincidences_graph.update_lines_data(new_coincidence_count_data)
 
     def _update_counts(self):
         channel1, channel2, coincidences = get_count_rates(
@@ -56,67 +71,14 @@ class RealTimeGraphsWidget(QWidget):
 
         self.signal_counter.record_measurement(channel1, channel2, coincidences)
 
-    def _set_single_counts_graph_lines(self):
-        channel1_line_pen = pg.mkPen(color=colors["red_primary"], **graph_line_style)
-        self.channel1_data_line = self.single_counts_graph_widget.plot(
-            self.signal_counter.elapsed_time,
-            self.signal_counter.channel1,
-            name="ch.1",
-            pen=channel1_line_pen,
-            symbol="s",
-            symbolSize=5,
-            symbolBrush=colors["red_primary"],
-        )
-
-        channel2_line_pen = pg.mkPen(color=colors["blue_primary"], **graph_line_style)
-
-        self.channel2_data_line = self.single_counts_graph_widget.plot(
-            self.signal_counter.elapsed_time,
-            self.signal_counter.channel2,
-            name="ch.2",
-            pen=channel2_line_pen,
-            symbol="o",
-            symbolSize=5,
-            symbolBrush=colors["blue_primary"],
-        )
-
-    def _set_coincidences_graph_lines(self):
-        cc_12_line_pen = pg.mkPen(color=colors["red_primary"], **graph_line_style)
-        self.coincidences_data_line = self.coincidences_graph_widget.plot(
-            self.signal_counter.elapsed_time,
-            self.signal_counter.coincidences,
-            name="1-2",
-            pen=cc_12_line_pen,
-            symbol="s",
-            symbolSize=5,
-            symbolBrush=colors["red_primary"],
-        )
-
-    def update_graph_event(self):
+    def _update_graph_event(self):
         self.timer = QtCore.QTimer()
         self.timer.setInterval(GRAPH_ANIMATION_INTERVAL)
-        self.timer.timeout.connect(self._update_plot_data)
+        self.timer.timeout.connect(self._update_plots)
         self.timer.start()
 
     def _configure_layout(self):
         layout = QVBoxLayout(self)
-        layout.addWidget(self.single_counts_graph_widget)
-        layout.addWidget(self.coincidences_graph_widget)
+        layout.addWidget(self.single_counts_graph)
+        layout.addWidget(self.coincidences_graph)
         self.setLayout(layout)
-
-    def _set_graph_widget_style(self):
-        self.single_counts_graph_widget.setBackground(colors["white_primary"])
-        self.single_counts_graph_widget.setTitle("Single Counts", **graph_title_style)
-        self.single_counts_graph_widget.setLabel(
-            "left", "Counts / s", **axis_label_style
-        )
-        self.single_counts_graph_widget.addLegend(offset=(10, 10))
-        self.single_counts_graph_widget.showGrid(x=True, y=True)
-        self.single_counts_graph_widget.setMouseEnabled(x=False, y=True)
-
-        self.coincidences_graph_widget.setBackground(colors["white_primary"])
-        self.coincidences_graph_widget.setTitle("Coincidences", **graph_title_style)
-        self.coincidences_graph_widget.setLabel("left", "CC/s", **axis_label_style)
-        self.coincidences_graph_widget.addLegend(offset=(10, 10))
-        self.coincidences_graph_widget.showGrid(x=True, y=True)
-        self.coincidences_graph_widget.setMouseEnabled(x=False, y=True)
