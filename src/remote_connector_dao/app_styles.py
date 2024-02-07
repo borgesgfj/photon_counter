@@ -1,21 +1,17 @@
 from PyQt5 import QtCore
+from enum import Enum
 
-colors = {
-    "white_primary": "#FFFFFF",
-    "red_primary": "#f81b0b",
-    "blue_primary": "#0a8def",
-    "green_primary": "#2ef304",
-    "black": "#000000",
-}
+
+class Colors(Enum):
+    WHITE_PRIMARY = "#FFFFFF"
+    RED_PRIMARY = "#f81b0b"
+    BLUE_PRIMARY = "#0a8def"
+    GREEN_PRIMARY = "#2ef304"
+    BLACK = "#000000"
+
 
 graph_line_style = {"width": 3, "style": QtCore.Qt.SolidLine}
 
-graph_title_style = {
-    "color": colors["black"],
-    "size": "15pt"
-}
+graph_title_style = {"color": Colors.BLACK.value, "size": "15pt"}
 
-axis_label_style = {
-    "font-size": "10pt",
-    "color": colors["black"]
-}
+axis_label_style = {"font-size": "20pt", "color": Colors.BLACK.value}

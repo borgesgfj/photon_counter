@@ -4,9 +4,6 @@ from remote_connector_dao.SignalCounter import SignalCounter
 from remote_connector_dao.get_signal import get_count_rates
 from remote_connector_dao.constants import GRAPH_ANIMATION_INTERVAL
 from remote_connector_dao.GraphWidget2D import GraphWidget2D
-from remote_connector_dao.app_styles import (
-    colors,
-)
 
 
 class RealTimeGraphsWidget(QWidget):
@@ -29,7 +26,6 @@ class RealTimeGraphsWidget(QWidget):
                 [signal_counter.elapsed_time, signal_counter.channel1],
                 [signal_counter.elapsed_time, signal_counter.channel2],
             ],
-            background_color=colors["white_primary"],
             vertical_axis_label="Counts / s",
             graph_title="Single Counts",
             graph_line_labels_list=["ch.1", "ch.2"],
@@ -40,7 +36,6 @@ class RealTimeGraphsWidget(QWidget):
             graph_lines_data=[
                 [signal_counter.elapsed_time, signal_counter.coincidences]
             ],
-            background_color=colors["white_primary"],
             vertical_axis_label="Coincidences / s",
             graph_title="Coincidences",
             graph_line_labels_list=["1-2"],

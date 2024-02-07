@@ -1,17 +1,13 @@
 import pyqtgraph as pg
+
 from remote_connector_dao.app_styles import (
-    colors,
+    Colors,
     graph_line_style,
     axis_label_style,
     graph_title_style,
 )
 
-LINE_COLORS = [
-    colors["red_primary"],
-    colors["blue_primary"],
-    colors["green_primary"],
-    colors["black"],
-]
+LINE_COLORS = [color.value for color in Colors if color.value != "#FFFFFF"]
 
 LINE_SYMBOLS = ["s", "o", "t", "+"]
 
@@ -21,23 +17,21 @@ class GraphWidget2D(pg.PlotWidget):
         self,
         number_of_lines,
         graph_lines_data,
-        background_color,
         graph_title,
         vertical_axis_label,
         graph_line_labels_list,
+        background_color=Colors.WHITE_PRIMARY.value,
     ):
         super().__init__()
         self.graph_lines = []
         self.graph_lines_data = graph_lines_data
         self.number_of_lines = number_of_lines
         self.graph_line_labels_list = graph_line_labels_list
+        self.background_color = background_color
 
-        self.setBackground(background_color)
         self.setTitle(graph_title, **graph_title_style)
         self.setLabel("left", vertical_axis_label, **axis_label_style)
-        self.addLegend(offset=(10, 10))
-        self.showGrid(x=True, y=True)
-        self.setMouseEnabled(x=False, y=True)
+        self._set_graph_basic_configurations()
 
         self._create_graph_lines()
 
@@ -59,6 +53,12 @@ class GraphWidget2D(pg.PlotWidget):
                 symbolBrush=line_color,
             )
             self.graph_lines.append(line)
+
+    def _set_graph_basic_configurations(self):
+        self.setBackground(self.background_color)
+        self.addLegend(offset=(10, 10))
+        self.showGrid(x=True, y=True)
+        self.setMouseEnabled(x=False, y=True)
 
     def update_lines_data(self, new_lines_data):
         for index, graph_line in enumerate(self.graph_lines):
