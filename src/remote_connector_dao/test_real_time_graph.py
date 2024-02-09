@@ -1,9 +1,13 @@
+import sys
+from PyQt5 import QtWidgets
 from remote_connector_dao.remote_connector_dao import connect_to_server
 from remote_connector_dao.real_time_plot import plot_real_time_graph
 from remote_connector_dao.constants import TRIGGER_VOLTAGE
 from remote_connector_dao.virtual_channels_builder import (
     build_coincidences_virtual_channel,
 )
+from remote_connector_dao.mainWindow import MainWindow
+from remote_connector_dao.SignalCounter import SignalCounter
 
 
 def run_real_time_graph():
@@ -14,9 +18,16 @@ def run_real_time_graph():
         timetagger_proxy, tagger_controller, single_channels_list
     )
 
+    # signal_counter = SignalCounter()
+
     channels = [*single_channels_list, coincidences_virtual_channel.getChannels()[0]]
 
     for channel in single_channels_list:
         tagger_controller.setTriggerLevel(channel, TRIGGER_VOLTAGE)
 
-    plot_real_time_graph(timetagger_proxy, tagger_controller, channels)
+    app = QtWidgets.QApplication(sys.argv)
+    window = MainWindow(timetagger_proxy, tagger_controller, channels)
+
+    window.show()
+    app.exec()
+    timetagger_proxy.freeTimeTagger(tagger_controller)
