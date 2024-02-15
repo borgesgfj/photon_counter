@@ -59,9 +59,7 @@ class TimeTaggerNetworkConnectionService:
         )
 
     def close_time_tagger_connection(self, time_tagger_alias: str):
-        time_tagger_info = self.connection_data.get_time_tagger_by_alias(
-            time_tagger_alias
-        )
+        time_tagger_info = self.connection_data.get_time_tagger_by_alias(time_tagger_alias)
 
         TT.freeTimeTagger(time_tagger_info.tagger_proxy)
 
