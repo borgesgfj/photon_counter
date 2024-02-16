@@ -1,36 +1,19 @@
-from remote_connector_dao.test_real_time_graph import run_real_time_graph
-
-from remote_connector_dao.constants import TRIGGER_VOLTAGE
-
-from remote_connector_dao.data.ConnectionData import TimeTaggerConnectionData
-
-from remote_connector_dao.TimeTaggerNetworkConnectionService import (
-    TimeTaggerNetworkConnectionService,
-    TimeTaggerAddressInfoDto,
-)
-
-from remote_connector_dao.TimeTaggerMeasurementService import (
-    TimeTaggerMeasurementService,
-    CountRateReqDto,
-)
-from remote_connector_dao.TimeTaggerHardwarePropertiesService import (
-    TimeTaggerHardwarePropertiesService,
-    SetTriggerLevelDto,
-)
-
-from remote_connector_dao.data.MeasurementsData import (
-    MeasurementsData,
-)
-
-from remote_connector_dao.TimeTaggerMeasurementDAO import (
-    TimeTaggerMeasurementDAO,
-)
-
-from remote_connector_dao.TimeTaggerVirtualChannelBuilder import (
-    TimeTaggerVirtualChannelBuilder,
-)
-
 from remote_connector_dao.AppController import AppController, CloseConnectionDto
+from shared.constants.constants import TRIGGER_VOLTAGE
+from time_tagger.connection.repository import ConnectionRepository
+from time_tagger.connection.service import (
+    TimeTaggerAddressInfoDto,
+    ConnectionService,
+)
+from time_tagger.hardware_properties.service import (
+    SetTriggerLevelDto,
+    TimeTaggerHardwarePropertiesService,
+)
+from time_tagger.measurement.dao import MeasurementDao
+from time_tagger.measurement.repository import MeasurementRepository
+from time_tagger.measurement.service import CountRateReqDto, ServiceRepository
+from time_tagger.builder import TimeTaggerBuilder
+from time_tagger.connection.dao import ConnectionDao
 
 # test_run()
 # run_real_time_graph()
@@ -42,17 +25,23 @@ from remote_connector_dao.AppController import AppController, CloseConnectionDto
     This file is a mess because I am only using this for testing.
 """
 
-connection_data = TimeTaggerConnectionData()
+connection_data = ConnectionRepository()
+
 time_tagger_hardware_properties_service = TimeTaggerHardwarePropertiesService()
-time_tagger_network_connection_service = TimeTaggerNetworkConnectionService(
-    connection_data, time_tagger_hardware_properties_service
+
+connection_dao = ConnectionDao()
+
+time_tagger_network_connection_service = ConnectionService(
+    connection_data, time_tagger_hardware_properties_service, connection_dao
 )
 
-time_tagger_measurement_dao = TimeTaggerMeasurementDAO()
-measurement_data = MeasurementsData()
-virtual_channel_builder = TimeTaggerVirtualChannelBuilder()
+time_tagger_measurement_dao = MeasurementDao()
 
-time_tagger_measurement_service = TimeTaggerMeasurementService(
+measurement_data = MeasurementRepository()
+
+virtual_channel_builder = TimeTaggerBuilder()
+
+time_tagger_measurement_service = ServiceRepository(
     time_tagger_measurement_dao, measurement_data, virtual_channel_builder
 )
 

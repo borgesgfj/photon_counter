@@ -1,18 +1,15 @@
 from dataclasses import dataclass
-from remote_connector_dao.TimeTaggerNetworkConnectionService import (
-    TimeTaggerNetworkConnectionService,
+from time_tagger.connection.repository import ConnectionRepository
+from time_tagger.connection.service import (
     TimeTaggerAddressInfoDto,
-    TimeTaggerConnectionRes,
+    ConnectionService,
+)
+from time_tagger.hardware_properties.service import (
+    SetTriggerLevelDto,
+    TimeTaggerHardwarePropertiesService,
 )
 
-from remote_connector_dao.TimeTaggerHardwarePropertiesService import (
-    TimeTaggerHardwarePropertiesService,
-    SetTriggerLevelDto,
-)
-from remote_connector_dao.TimeTaggerMeasurementService import (
-    TimeTaggerMeasurementService,
-    CountRateReqDto,
-)
+from time_tagger.measurement.service import CountRateReqDto, ServiceRepository
 
 
 @dataclass
@@ -24,8 +21,8 @@ class CloseConnectionDto:
 class AppController:
     def __init__(
         self,
-        time_tagger_network_connection_service: TimeTaggerNetworkConnectionService,
-        time_tagger_measurement_service: TimeTaggerMeasurementService,
+        time_tagger_network_connection_service: ConnectionService,
+        time_tagger_measurement_service: ServiceRepository,
         time_tagger_hardware_service: TimeTaggerHardwarePropertiesService,
     ) -> None:
         self.time_tagger_network_connection_service = time_tagger_network_connection_service
@@ -34,7 +31,7 @@ class AppController:
 
     def connect_to_time_taggers_network(
         self, time_tagger_addresses_info: list[TimeTaggerAddressInfoDto]
-    ) -> TimeTaggerConnectionRes:
+    ) -> ConnectionRepository:
         return self.time_tagger_network_connection_service.connect_to_time_tagger_server(
             time_tagger_addresses_info
         )
