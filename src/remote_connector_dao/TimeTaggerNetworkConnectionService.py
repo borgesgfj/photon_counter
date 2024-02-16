@@ -48,7 +48,9 @@ class TimeTaggerNetworkConnectionService:
                 tagger = TT.createTimeTaggerNetwork(
                     f"{time_tagger.host_address}:{time_tagger.port}"
                 )
-                serial_number = self.time_tagger_hardware_service.get_time_tagger_serial_number
+                serial_number = self.time_tagger_hardware_service.get_time_tagger_serial_number(
+                    tagger
+                )
 
                 connection_info_res = self.connection_data.upsert_time_tagger_connection_info(
                     TimeTaggerConnectionInfoDto(

@@ -78,17 +78,14 @@ req = app_controller.connect_to_time_taggers_network(
     ]
 )
 
-print(req)
+print(req, end="\n\n")
 
-print(
-    req.connection_failed_devices,
-    "connection failed devices",
-)
+print(req.connection_failed_devices, "connection failed devices", end="\n\n")
 
 tagger = req.connected_devices[0].tagger_proxy
 connected_device_name = req.connected_devices[0].time_tagger_name
 
-app_controller.set_time_tagger_channels_trigger_level(
+set_trigger_level_res = app_controller.set_time_tagger_channels_trigger_level(
     SetTriggerLevelDto(
         time_tagger_network_proxy=tagger,
         channels_voltage={
@@ -100,8 +97,10 @@ app_controller.set_time_tagger_channels_trigger_level(
     )
 )
 
+print(set_trigger_level_res, end="\n\n")
+
 serial = req.connected_devices[0].serial_number
-print(serial)
+print(serial, "serial number of connceted TT", end="\n\n")
 
 
 single_counts = app_controller.get_single_counts_rate_time_series(
@@ -111,7 +110,7 @@ single_counts = app_controller.get_single_counts_rate_time_series(
         time_tagger_network_proxy=tagger,
     )
 )
-print(single_counts)
+print(single_counts, "single counts", end="\n\n")
 
 coincidences_counts = app_controller.get_coincidence_counts_rate_time_series(
     CountRateReqDto(
@@ -121,7 +120,7 @@ coincidences_counts = app_controller.get_coincidence_counts_rate_time_series(
     )
 )
 
-print(coincidences_counts)
+print(coincidences_counts, "coincidences counts", end="\n\n")
 
 
 app_controller.close_time_tagger_network_connections(
