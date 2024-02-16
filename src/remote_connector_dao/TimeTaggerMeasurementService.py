@@ -47,7 +47,7 @@ class TimeTaggerMeasurementService:
             self.measurements_data.initialize_single_channels_data(
                 SingleChannelDataInitializationDto(device_serial, channels)
             )
-        channels_data = self._build_count_rate_channel_data(channels, count_rate_data)
+        channels_data = self._build_count_rate_data_per_channel(channels, count_rate_data)
 
         upsert_data = self.measurements_data.update_single_counts_rate(device_serial, channels_data)
         return upsert_data
@@ -79,7 +79,7 @@ class TimeTaggerMeasurementService:
                 CoincidenceGroupsDataInitializationDto(device_serial, coincidence_channels_group)
             )
 
-        group_channels_data = self._build_coincidence_channel_group_data(
+        group_channels_data = self._build_coincidence_data_per_channel_group(
             coincidence_channels_group, counts_data
         )
 
@@ -89,14 +89,14 @@ class TimeTaggerMeasurementService:
 
         return upsert_data
 
-    def _build_count_rate_channel_data(self, channels: list[int], counts: list[float]):
+    def _build_count_rate_data_per_channel(self, channels: list[int], counts: list[float]):
         channels_data = {}
         for index, channel in enumerate(channels):
             channels_data[channel] = counts[index]
 
         return channels_data
 
-    def _build_coincidence_channel_group_data(
+    def _build_coincidence_data_per_channel_group(
         self, channel_groups: list[tuple[int, int]], counts: list[float]
     ):
         groups_data = {}

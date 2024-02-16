@@ -8,11 +8,11 @@ class SetTriggerLevelDto:
     channels_voltage: dict[int, float]
 
 
-class TimeTaggerHardwareService:
+class TimeTaggerHardwarePropertiesService:
     def __init__(self) -> None:
         pass
 
-    def setTriggerLevel(self, set_trigger_level_dto: SetTriggerLevelDto):
+    def set_trigger_level(self, set_trigger_level_dto: SetTriggerLevelDto):
         for channel in set_trigger_level_dto.channels_voltage:
             TT.TimeTaggerNetwork.setTriggerLevel(
                 set_trigger_level_dto.time_tagger_network_proxy,
@@ -20,6 +20,15 @@ class TimeTaggerHardwareService:
                 voltage=set_trigger_level_dto.channels_voltage[channel],
             )
 
-    def getTimeTaggerSerialNumber(self, time_tagger_network_proxy):
+    def get_time_tagger_serial_number(self, time_tagger_network_proxy):
 
         return TT.TimeTaggerNetwork.getSerial(time_tagger_network_proxy)
+
+    def get_channels_trigger_level(self, channels: list[int], time_tagger_proxy):
+        triggers_level = {}
+
+        for channel in channels:
+            voltage = TT.TimeTaggerNetwork.getTriggerLevel(time_tagger_proxy, channel)
+            triggers_level[channel] = voltage
+
+        return triggers_level

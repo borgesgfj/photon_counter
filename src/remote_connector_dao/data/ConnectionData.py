@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from remote_connector_dao.ErrorMessageEnum import ErrorMessageEnum
 
 
 class ConnectionStatusEnum(Enum):
@@ -8,8 +9,8 @@ class ConnectionStatusEnum(Enum):
 
 
 @dataclass
-class TimeTaggerConnectionResDto:
-    time_tagger_aliases: str
+class TimeTaggerConnectionInfoDto:
+    time_tagger_name: str
     tagger_proxy: object
     connection_status: ConnectionStatusEnum
     serial_number: str = None
@@ -17,18 +18,16 @@ class TimeTaggerConnectionResDto:
 
 class TimeTaggerConnectionData:
     def __init__(self) -> None:
-        self._registered_devices: dict[str, TimeTaggerConnectionResDto] = {}
+        self._registered_devices: dict[str, TimeTaggerConnectionInfoDto] = {}
 
-    def save_time_tagger_connection_info(
-        self, connection_response: TimeTaggerConnectionResDto
-    ):
-        self._registered_devices[connection_response.time_tagger_aliases] = (
-            connection_response
-        )
+    def upsert_time_tagger_connection_info(self, connection_response: TimeTaggerConnectionInfoDto):
+        self._registered_devices[connection_response.time_tagger_name] = connection_response
+
+        return self._registered_devices[connection_response.time_tagger_name]
 
     def get_time_taggers_by_connection_status(
         self, connection_status: ConnectionStatusEnum
-    ) -> list[TimeTaggerConnectionResDto]:
+    ) -> list[TimeTaggerConnectionInfoDto]:
 
         return [
             device
@@ -36,9 +35,19 @@ class TimeTaggerConnectionData:
             if device.connection_status == connection_status
         ]
 
-    def get_time_tagger_by_alias(self, time_tagger_alias: str):
+    def get_time_tagger_by_name(self, time_tagger_name: str):
 
-        if time_tagger_alias in self._registered_devices:
-            return self._registered_devices[time_tagger_alias]
+        if time_tagger_name in self._registered_devices:
+            return self._registered_devices[time_tagger_name]
 
-        raise NameError(f"Device {time_tagger_alias} not found")
+        raise NameError(ErrorMessageEnum.DEVICE_NOT_FOUND.value)
+
+    def get_time_tagger_name_by_connection_status(self, connection_status: ConnectionStatusEnum):
+        devices_connection_info = self.get_time_taggers_by_connection_status(connection_status)
+
+        connected_name = [device.time_tagger_name for device in devices_connection_info]
+
+        return connected_name
+
+    def delete_connection_data(self, time_tagger_name: str):
+        self._registered_devices.pop(time_tagger_name, None)
