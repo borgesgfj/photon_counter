@@ -1,9 +1,10 @@
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
 from remote_connector_dao.SignalCounter import SignalCounter
+from remote_connector_dao.app_styles import Colors
 from remote_connector_dao.get_signal import get_count_rates
 from remote_connector_dao.constants import GRAPH_ANIMATION_INTERVAL
-from remote_connector_dao.GraphWidget2D import GraphWidget2D
+from remote_connector_dao.GraphWidget2D import GraphLineSetup, GraphWidget2D
 
 
 class RealTimeGraphsWidget(QWidget):
@@ -20,25 +21,37 @@ class RealTimeGraphsWidget(QWidget):
         self.timetagger_proxy = timetagger_proxy
         self.timetagger_controller = timetagger_controller
 
+        single_counts_lines = [
+            GraphLineSetup(
+                label="ch.1",
+                symbol="s",
+                color=Colors.RED_PRIMARY,
+                initial_data=(signal_counter.elapsed_time, signal_counter.channel1),
+            ),
+            GraphLineSetup(
+                label="ch.2",
+                symbol="o",
+                color=Colors.BLUE_PRIMARY,
+                initial_data=(signal_counter.elapsed_time, signal_counter.channel2),
+            ),
+        ]
         self.single_counts_graph = GraphWidget2D(
-            number_of_lines=2,
-            graph_lines_data=[
-                [signal_counter.elapsed_time, signal_counter.channel1],
-                [signal_counter.elapsed_time, signal_counter.channel2],
-            ],
+            lines=single_counts_lines,
             vertical_axis_label="Counts / s",
             graph_title="Single Counts",
-            graph_line_labels_list=["ch.1", "ch.2"],
         )
 
         self.coincidences_graph = GraphWidget2D(
-            number_of_lines=1,
-            graph_lines_data=[
-                [signal_counter.elapsed_time, signal_counter.coincidences]
+            lines=[
+                GraphLineSetup(
+                    label="1-2",
+                    symbol="s",
+                    color=Colors.RED_PRIMARY,
+                    initial_data=(signal_counter.elapsed_time, signal_counter.coincidences),
+                ),
             ],
             vertical_axis_label="Coincidences / s",
             graph_title="Coincidences",
-            graph_line_labels_list=["1-2"],
         )
 
         self._update_graph_event()
