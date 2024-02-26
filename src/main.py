@@ -11,7 +11,6 @@ from time_tagger.hardware_properties.dao import (
     SetTriggerLevelParams,
     TimeTaggerHardwarePropertiesDao,
 )
-from time_tagger.measurement.dao import MeasurementDao
 from time_tagger.measurement.repository import MeasurementRepository
 from time_tagger.measurement.service import MeasurementService
 from time_tagger.builder import TimeTaggerBuilder
@@ -35,14 +34,10 @@ time_tagger_network_connection_service = ConnectionService(
 
 time_tagger_builder = TimeTaggerBuilder()
 
-time_tagger_measurement_dao = MeasurementDao(time_tagger_builder)
-
 measurement_data = MeasurementRepository()
 
 
-time_tagger_measurement_service = MeasurementService(
-    time_tagger_measurement_dao, measurement_data, time_tagger_builder
-)
+time_tagger_measurement_service = MeasurementService(measurement_data)
 
 app_controller = AppController(
     time_tagger_network_connection_service=time_tagger_network_connection_service,
