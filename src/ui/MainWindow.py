@@ -132,17 +132,19 @@ class MainWindow(QMainWindow):
         line_setup = []
         for i,m_channel in enumerate(self.main_button_list):
             if m_channel.isChecked():
+                channel_list += [i+1]
                 for j,s_channel in enumerate(self.check_button_list):
                     if s_channel.isChecked(): 
+                        channel_list += [j+1]
                         line_setup += [ GraphLineSetup(
                         label=f"ch.{i+1}/{j+1}",
                         symbol="s",
                         color=Color.RED_PRIMARY,
                         initial_data=[[[0.0], [0]]],
                         )]
-                        coincidence_virtual_channel = self.builder.build_coincidence_virtual_channel(self.timetagger_proxy, [i+1,j+1])
-                        channel_list += [coincidence_virtual_channel.getChannels()[0]]
-        param = CountRateReqParams(channel_list,self.device_serial_number,self.timetagger_proxy,MeasurementType.COINCIDENCES)
+        self.coincidence_virtual_channel = self.builder.build_coincidence_virtual_channel(self.timetagger_proxy, channel_list)
+        v_channel_list += coincidence_virtual_channel.getChannels()
+        param = CountRateReqParams(v_channel_list,self.device_serial_number,self.timetagger_proxy,MeasurementType.COINCIDENCES)
         w = WidgetInfo("Coincidence Count",line_setup,
                         "Count/s",Color.WHITE_PRIMARY)
         widget = (w, param)
