@@ -14,11 +14,16 @@ class CountRateReqParams:
     device_serial: str
     time_tagger_network_proxy: object
     measurement_type: MeasurementType
+    #Params added for the histogram plot
+    histogram_measurement= None
+    bin_width = 100
+    n_bin = 100
 
 
 class MeasurementService:
     def __init__(
         self,
+
         measurements_data: MeasurementRepository,
     ):
         self.measurements_data = measurements_data
@@ -52,3 +57,19 @@ class MeasurementService:
             counts = cr.getData()
 
             return counts
+
+    def _getData_histo(self,request_params: CountRateReqParams):
+        histo_type = request_params.measurement_type.value
+        histo_measurement =request_params.histogram_measurement
+        match histo_type:
+            case  "HISTOGRAM_START_STOP" : 
+                return histo_measurement.getData()
+            case  "HISTOGRAM_CORR" : 
+                x = histo_measurement.getIndex()
+                y = histo_measurement.getData() 
+                return [x,y]
+            case "HISTOGRAM" :
+                x = histo_measurement.getIndex()
+                y = histo_measurement.getData() 
+                return [x,y]
+            case _: assert 0, "this" + histo_type + "correlation class doesn't exist"s

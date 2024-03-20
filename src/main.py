@@ -16,7 +16,7 @@ from time_tagger.measurement.service import MeasurementService
 from time_tagger.builder import TimeTaggerBuilder
 from time_tagger.connection.dao import ConnectionDao
 from ui.MainWindow import MainWindow
-
+from time_tagger.measurement.dao import CountRateMeasurementReqParams, MeasurementDao
 """
     This file is a mess because I am only using this for testing.
 """
@@ -36,7 +36,6 @@ time_tagger_builder = TimeTaggerBuilder()
 
 measurement_data = MeasurementRepository()
 
-
 time_tagger_measurement_service = MeasurementService(measurement_data)
 
 app_controller = AppController(
@@ -49,6 +48,7 @@ app_controller = AppController(
 req = app_controller.connect_to_time_taggers_network(
     [
         TimeTaggerAddressInfo(
+
             host_address="192.168.10.100",
             port="41101",
             time_tagger_name="Alice_tagger",
@@ -72,7 +72,9 @@ coincidence_virtual_channel = time_tagger_builder.build_coincidence_virtual_chan
     tagger, channels
 )
 
+
 cc_virtual_channel_numbers = coincidence_virtual_channel.getChannels()
+
 
 set_trigger_level_res = app_controller.set_time_tagger_channels_trigger_level(
     SetTriggerLevelParams(
@@ -107,3 +109,4 @@ app.exec()
 app_controller.close_time_tagger_network_connections(
     [CloseConnectionPrams(connected_device_name, tagger)]
 )
+
