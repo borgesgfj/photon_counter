@@ -67,7 +67,7 @@ coincidence_virtual_channel = time_tagger_builder.build_coincidence_virtual_chan
     tagger, channels
 )
 
-cc_virtual_channel_numbers = coincidence_virtual_channel.getChannels()
+cc_virtual_channel_numbers = [coincidence_virtual_channel.getChannels()[0]]
 
 set_trigger_level_res = app_controller.set_time_tagger_channels_trigger_level(
     SetTriggerLevelParams(
@@ -85,6 +85,11 @@ print(set_trigger_level_res, end="\n\n")
 
 serial = req.connected_devices[0].serial_number
 print(serial, "serial number of connceted TT", end="\n\n")
+
+
+config = tagger.getChannelList()
+
+
 
 app = QtWidgets.QApplication(sys.argv)
 window = MainWindow(

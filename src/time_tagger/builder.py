@@ -18,6 +18,7 @@ class TimeTaggerBuilder:
             coincidence_channels_group,
             coincidenceWindow=4000,
         )
+   
     """
     Build the histogram measurment
     Need:

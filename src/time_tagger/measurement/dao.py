@@ -18,7 +18,7 @@ class MeasurementDao:
         self, count_rate_measurement_params: CountRateMeasurementReqParams
     ):
         channels = count_rate_measurement_params.channels
-
+        print(channels)
         with TT.Countrate(
             tagger=count_rate_measurement_params.time_tagger_network_proxy,
             channels=channels,
