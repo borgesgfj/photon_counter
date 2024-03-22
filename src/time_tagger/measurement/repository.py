@@ -5,6 +5,9 @@ from enum import Enum
 class MeasurementType(Enum):
     SINGLE_COUNTS = "SINGLE_COUNTS"
     COINCIDENCES = "COINCIDENCES"
+    HISTOGRAM = "HISTOGRAM"
+    HISTOGRAM_START_STOP = "HISTOGRAM_START_STOP"
+    HISTOGRAM_CORR = "HISTOGRAM_CORR"
 
 
 @dataclass
