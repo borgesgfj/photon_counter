@@ -1,5 +1,6 @@
 from itertools import combinations
 import TimeTagger as TT
+from time_tagger.measurement.repository import MeasurementType
 
 
 class TimeTaggerBuilder:
@@ -18,3 +19,18 @@ class TimeTaggerBuilder:
             coincidence_channels_group,
             coincidenceWindow=4000,
         )
+
+    """
+    Build the histogram measurment
+    Need:
+        the type of measurment
+        bin width in ps
+        number of bin
+    """
+    def build_histogram_measurment(self, time_tagger_network_proxy: object,
+         channels_list: list[int], measurment_type,bin_width=100, n_bin=1000):
+         match measurment_type:
+             case  MeasurementType.HISTOGRAM_START_STOP : return TT.StartStop(time_tagger_network_proxy,*channels_list,bin_width)
+             case  MeasurementType.HISTOGRAM_CORR : return TT.Correlation(time_tagger_network_proxy,*channels_list,bin_width, n_bin)
+             case  MeasurementType.HISTOGRAM : return TT.Histogram(time_tagger_network_proxy,*channels_list,bin_width,n_bin)
+             case _: assert 0, "this" + measurment_type + "correlation class doesn't exist"
