@@ -39,3 +39,6 @@ class MeasurementRepository:
                 recorded_data.pop(0)
 
         return self.measurements_per_device[measurement_key]
+
+    def clear(self):
+            self.measurements_per_device: dict[tuple[str, MeasurementType]] = {}
