@@ -4,103 +4,42 @@ from shared.constants.constants import GRAPH_ANIMATION_INTERVAL
 from ui.styles import Color
 from ui.graphs.GraphWidget2D import GraphWidget2D, GraphLineSetup
 from AppController import AppController, CountRateReqParams
-from time_tagger.measurement.repository import MeasurementType
 from time_tagger.measurement.service import MeasurementService
 
 
 class RealTimeGraphsWidget(QWidget):
     def __init__(
         self,
-        app_controller: AppController,
-        measurement_service: MeasurementService,
-        time_tagger_proxy,
-        channels: list[int],
-        device_serial: str,
-        coincidence_virtual_channels: list[int],
+        info_widget_list,
+        measaurement_service
     ):
         super().__init__()
-        self.channels_list = channels
-        self.device_serial = device_serial
-        self.time_tagger_proxy = time_tagger_proxy
-        self.app_controller = app_controller
-        self.measurement_service = measurement_service
-        self.coincidence_virtual_channels = coincidence_virtual_channels
-        self.x_axis_values = []
-
-        single_counts_lines = [
-            GraphLineSetup(
-                label="ch.1",
-                symbol="s",
-                color=Color.RED_PRIMARY,
-                initial_data=[[[0.0], [0]]],
-            ),
-            GraphLineSetup(
-                label="ch.2",
-                symbol="o",
-                color=Color.BLUE_PRIMARY,
-                initial_data=[[[0.0], [0]]],
-            ),
-        ]
-        self.single_counts_graph = GraphWidget2D(
-            lines=single_counts_lines,
-            vertical_axis_label="Counts / s",
-            graph_title="Single Counts",
-        )
-
-        self.coincidences_graph = GraphWidget2D(
-            lines=[
-                GraphLineSetup(
-                    label="1-2",
-                    symbol="s",
-                    color=Color.RED_PRIMARY,
-                    initial_data=[[[0.0], [0]]],
-                ),
-            ],
-            vertical_axis_label="Coincidences / s",
-            graph_title="Coincidences",
-        )
-
+        self.widget_info_list = info_widget_list # List of tuples containing (Widget Info,  CountRateReqParams)
+        self.widget_list = []
+        self.measurement_service = measaurement_service
+        self._init_graph()
         self._update_graph_event()
 
-        self._configure_layout()
+
+    def _init_graph(self):
+        layout = QVBoxLayout(self)
+        for widget_info in self.widget_info_list:
+            graph_widget = GraphWidget2D(widget_info[0])
+            x_axis = [] # each plot get a x-axis, maybe not needed ?
+            self.widget_list += [[widget_info[1],graph_widget,x_axis]]
+            layout.addWidget(graph_widget)
+        self.setLayout(layout)
 
     def _update_plots(self):
-        single_count_data = self.measurement_service.record_measurement_data(
-            CountRateReqParams(
-                channels=self.channels_list,
-                device_serial=self.device_serial,
-                time_tagger_network_proxy=self.time_tagger_proxy,
-                measurement_type=MeasurementType.SINGLE_COUNTS,
-            )
-        )
+        for widget in self.widget_list:
+            if widget[1].is_histogram:
+                data = self.measurement_service.getData_histo(widget[0])
+                widget[1].update_lines_data(data[0],[data[1]])
+            else:
+                widget[2]= self. _update_x_axis_value(widget[2])
+                new_data = self.measurement_service.record_measurement_data(widget[0])
+                widget[1].update_lines_data(widget[2],new_data)
 
-        coincidences_data = self.measurement_service.record_measurement_data(
-            CountRateReqParams(
-                channels=self.coincidence_virtual_channels,
-                device_serial=self.device_serial,
-                time_tagger_network_proxy=self.time_tagger_proxy,
-                measurement_type=MeasurementType.COINCIDENCES,
-            )
-        )
-
-        x_axis = self._update_x_axis_value()
-
-        self.single_counts_graph.update_lines_data(
-            new_x_data=x_axis, new_lines_y_data=single_count_data
-        )
-        self.coincidences_graph.update_lines_data(
-            new_x_data=x_axis, new_lines_y_data=coincidences_data
-        )
-
-    def _update_x_axis_value(self) -> list[float]:
-        previous_value = self.x_axis_values[-1] if self.x_axis_values else 0
-
-        self.x_axis_values.append(previous_value + 1)
-
-        if len(self.x_axis_values) > 50:
-            self.x_axis_values.pop(0)
-
-        return self.x_axis_values
 
     def _update_graph_event(self):
         self.timer = QtCore.QTimer()
@@ -108,8 +47,13 @@ class RealTimeGraphsWidget(QWidget):
         self.timer.timeout.connect(self._update_plots)
         self.timer.start()
 
-    def _configure_layout(self):
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.single_counts_graph)
-        layout.addWidget(self.coincidences_graph)
-        self.setLayout(layout)
+
+    def _update_x_axis_value(self,x_axis_values) -> list[float]:
+        previous_value = x_axis_values[-1] if x_axis_values else 0
+
+        x_axis_values.append(previous_value + 1)
+
+        if len(x_axis_values) > 50:
+            x_axis_values.pop(0)
+
+        return x_axis_values
