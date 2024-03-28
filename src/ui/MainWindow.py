@@ -1,3 +1,4 @@
+from types import MethodType
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget,  QComboBox, QCheckBox, QGroupBox
 from AppController import AppController
@@ -9,6 +10,8 @@ from time_tagger.measurement.repository import MeasurementType
 from time_tagger.builder import TimeTaggerBuilder
 
 color_list = [Color.BLUE_PRIMARY,Color.GREEN_PRIMARY,Color.RED_PRIMARY,Color.BLACK]
+histogram_type = {"Histogram": MeasurementType.HISTOGRAM,"Start stop":MeasurementType.HISTOGRAM_START_STOP,"Correlation":MeasurementType.HISTOGRAM_CORR}
+
 
 class MainWindow(QMainWindow):
     def __init__(
@@ -24,11 +27,9 @@ class MainWindow(QMainWindow):
     ):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.app_controller = app_controller
-        self.channels_list = channels
         self.timetagger_proxy = timetagger_proxy
         self.device_serial_number = device_serial_number
         self.measurement_service = measurement_service
-        self.graph_widget = None
         self.widget_list = []
         self.histo_list = []
         self.builder = TimeTaggerBuilder()
@@ -43,6 +44,12 @@ class MainWindow(QMainWindow):
         self.selector.addItems(items)
         self.selector.activated.connect(self._show_graph)
         v_right_layout.addWidget(self.selector)
+
+        self.selector_histo = QComboBox()
+        self.selector_histo.addItems(histogram_type.keys())
+        self.selector_histo.activated.connect(self._show_graph)
+        v_right_layout.addWidget(self.selector_histo)
+        self.selector_histo.setVisible(False)
 
         self.main_button_list = []
         box = QGroupBox("Main Channel")
@@ -84,28 +91,31 @@ class MainWindow(QMainWindow):
         graph_type = self.selector.currentText()
         match graph_type:
             case "Single count":
+                self.selector_histo.setVisible(False)
                 for histo in self.histo_list:
                     histo.stop()
                 for widget in self.widget_list:
                     self.v_left_layout.removeWidget(widget)
                     widget.timer.stop()
-                    widget = None
+                    widget.close()
                 self.update()
                 self.wiget_list = []
                 self.measurement_service.measurements_data.clear()
                 self._update_graph_widget_single()
             case "Coincidence rate":
+                self.selector_histo.setVisible(False)
                 for histo in self.histo_list:
                     histo.stop()
                 for widget in self.widget_list:
                     self.v_left_layout.removeWidget(widget)
                     widget.timer.stop()
-                    widget = None
+                    widget.close()
                 self.update()
                 self.wiget_list = []
                 self.measurement_service.measurements_data.clear()
                 self._update_graph_widget_coincidence()
             case "Coincidence histogram":
+                self.selector_histo.setVisible(True)
                 for histo in self.histo_list:
                     histo.stop()
                 for widget in self.widget_list:
@@ -122,6 +132,7 @@ class MainWindow(QMainWindow):
                                 if j!=i:
                                     self._update_graph_widget_histogram((i+1,j+1))
             case "Single and Coincidence":
+                self.selector_histo.setVisible(False)
                 for histo in self.histo_list:
                     histo.stop()
                 for widget in self.widget_list:
@@ -133,7 +144,7 @@ class MainWindow(QMainWindow):
                 self.measurement_service.measurements_data.clear()
                 self._update_graph_widget_single()
                 self._update_graph_widget_coincidence()
-            case _: assert 0, "Unrechable"
+            case _: assert 0, "Unreachable"
 
     #Clear and update the graph for the single count rate
     def _update_graph_widget_single(self):
@@ -181,7 +192,6 @@ class MainWindow(QMainWindow):
                             coincidence_virtual_channel = self.builder.build_coincidence_virtual_channel(self.timetagger_proxy, channel_list)
                             self.coincidence_list += [coincidence_virtual_channel]
                             v_channel_list += [coincidence_virtual_channel.getChannels()[0]]
-        print(v_channel_list)
         param = CountRateReqParams(v_channel_list,self.device_serial_number,self.timetagger_proxy,MeasurementType.COINCIDENCES)
         w = WidgetInfo("Coincidence Count",line_setup,
                         "Count/s",Color.WHITE_PRIMARY)
@@ -196,11 +206,11 @@ class MainWindow(QMainWindow):
             symbol="s",
             color=Color.RED_PRIMARY,
             initial_data=[[[0.0], [0]]],)]
-
-        histo = self.builder.build_histogram_measurment(self.timetagger_proxy, channels,MeasurementType.HISTOGRAM)
-        self.histo_list  += [histo]
+        histo_type = histogram_type[self.selector_histo.currentText()]
         param = CountRateReqParams(channels,self.device_serial_number,
-                                    self.timetagger_proxy,MeasurementType.HISTOGRAM )
+                                    self.timetagger_proxy,histo_type )
+        histo = self.builder.build_histogram_measurment(param)
+        self.histo_list  += [histo]
         param.histogram_measurement = histo
         w = WidgetInfo("Coincidence Count",line_setup,
                         "Count",Color.WHITE_PRIMARY,True)

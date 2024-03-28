@@ -16,7 +16,7 @@ class CountRateReqParams:
     measurement_type: MeasurementType
     histogram_measurement= None
     bin_width = 100
-    n_bin = 100
+    n_bin = 1000
 
 class MeasurementService:
     def __init__(
@@ -60,7 +60,10 @@ class MeasurementService:
         histo_measurement =request_params.histogram_measurement
         match histo_type:
             case  MeasurementType.HISTOGRAM_START_STOP :
-                return histo_measurement.getData()
+                data =histo_measurement.getData()
+                x = data[:,0]
+                y = data[:,1]
+                return [x,y]
             case  MeasurementType.HISTOGRAM_CORR :
                 x = histo_measurement.getIndex()
                 y = histo_measurement.getData()
@@ -69,4 +72,4 @@ class MeasurementService:
                 x = histo_measurement.getIndex()
                 y = histo_measurement.getData()
                 return [x,y]
-            case _: assert 0, "this" + histo_type + "correlation class doesn't exist"
+            case _: assert 0, "this" + histo_type.value + "correlation class doesn't exist"

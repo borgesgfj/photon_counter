@@ -40,9 +40,7 @@ time_tagger_measurement_dao = MeasurementDao(time_tagger_builder)
 measurement_data = MeasurementRepository()
 
 
-time_tagger_measurement_service = MeasurementService(
-    time_tagger_measurement_dao, measurement_data, time_tagger_builder
-)
+time_tagger_measurement_service = MeasurementService(measurement_data)
 
 app_controller = AppController(
     time_tagger_network_connection_service=time_tagger_network_connection_service,
