@@ -69,7 +69,6 @@ class GraphWidget2D(pg.PlotWidget):
                 for line in lines
             ]
 
-
     def _set_graph_basic_configurations(self, background_color: Color):
         self.setBackground(background_color.value)
         self.addLegend(offset=(10, 10))
@@ -79,12 +78,6 @@ class GraphWidget2D(pg.PlotWidget):
     def update_lines_data(
         self, new_x_data: list[int], new_lines_y_data: list[list[float]]
     ):
-
-        if self.is_histogram :
-            for index, graph_line in enumerate(self._plotted_lines):
-                new_y_data = new_lines_y_data[index]
-                graph_line.setData(new_x_data,new_y_data)
-        else:
-            for index, graph_line in enumerate(self._plotted_lines):
-                new_y_data = new_lines_y_data[index]
-                graph_line.setData(new_x_data, new_y_data)
+        for index, graph_line in enumerate(self._plotted_lines):
+            new_y_data = new_lines_y_data[index]
+            graph_line.setData(new_x_data, new_y_data)

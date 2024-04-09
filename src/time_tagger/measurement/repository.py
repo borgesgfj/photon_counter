@@ -9,7 +9,6 @@ class MeasurementType(Enum):
     HISTOGRAM_START_STOP = "HISTOGRAM_START_STOP"
     HISTOGRAM_CORR = "HISTOGRAM_CORR"
 
-
 @dataclass
 class UpsertDataParams:
     channels: list[int]
@@ -32,9 +31,7 @@ class MeasurementRepository:
 
         for index, value in enumerate(params.data):
             recorded_data = self.measurements_per_device[measurement_key][index]
-
             recorded_data.append(value)
-
             if len(recorded_data) > 50:
                 recorded_data.pop(0)
 
@@ -42,3 +39,10 @@ class MeasurementRepository:
 
     def clear(self):
             self.measurements_per_device: dict[tuple[str, MeasurementType]] = {}
+
+    def get_last_value(self):
+        last = []
+        for key in self.measurements_per_device.keys():
+            for channel in self.measurements_per_device[key]:
+                last += [channel[-1]]
+        return last

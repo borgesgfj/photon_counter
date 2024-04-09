@@ -15,11 +15,10 @@ class RealTimeGraphsWidget(QWidget):
     ):
         super().__init__()
         self.widget_info_list = info_widget_list # List of tuples containing (Widget Info,  CountRateReqParams)
-        self.widget_list = []
         self.measurement_service = measaurement_service
+        self.widget_list = []
         self._init_graph()
         self._update_graph_event()
-
 
     def _init_graph(self):
         layout = QVBoxLayout(self)
@@ -40,20 +39,15 @@ class RealTimeGraphsWidget(QWidget):
                 new_data = self.measurement_service.record_measurement_data(widget[0])
                 widget[1].update_lines_data(widget[2],new_data)
 
-
     def _update_graph_event(self):
         self.timer = QtCore.QTimer()
         self.timer.setInterval(GRAPH_ANIMATION_INTERVAL)
         self.timer.timeout.connect(self._update_plots)
         self.timer.start()
 
-
     def _update_x_axis_value(self,x_axis_values) -> list[float]:
         previous_value = x_axis_values[-1] if x_axis_values else 0
-
         x_axis_values.append(previous_value + 1)
-
         if len(x_axis_values) > 50:
             x_axis_values.pop(0)
-
         return x_axis_values

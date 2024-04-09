@@ -18,7 +18,7 @@ class TimeTaggerBuilder:
         return TT.Coincidences(
             time_tagger_network_proxy,
             coincidence_channels_group,
-            coincidenceWindow=4000,
+            coincidenceWindow=6000,
         )
 
     """
@@ -35,4 +35,4 @@ class TimeTaggerBuilder:
             case  MeasurementType.HISTOGRAM_START_STOP : return TT.StartStop(time_tagger_network_proxy,*channels_list,bin_width)
             case  MeasurementType.HISTOGRAM_CORR : return TT.Correlation(time_tagger_network_proxy,*channels_list,bin_width, n_bin)
             case  MeasurementType.HISTOGRAM : return TT.Histogram(time_tagger_network_proxy,*channels_list,bin_width,n_bin)
-            case _: assert 0, "this" + measurment_type + "correlation class doesn't exist"
+            case _: assert 0, "this" + measurment_type.value + "correlation class doesn't exist"

@@ -1,6 +1,6 @@
 from types import MethodType
-from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget,  QComboBox, QCheckBox, QGroupBox
+from PyQt5.QtWidgets import QMainWindow, QGridLayout, QComboBox, QCheckBox, QGroupBox,QLabel
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget
 from AppController import AppController
 from ui.graphs.RealTimeGraphsWidget import RealTimeGraphsWidget
 from time_tagger.measurement.service import MeasurementService , CountRateReqParams
@@ -8,10 +8,12 @@ from ui.styles import Color
 from ui.graphs.GraphWidget2D import WidgetInfo, GraphLineSetup
 from time_tagger.measurement.repository import MeasurementType
 from time_tagger.builder import TimeTaggerBuilder
-
+from shared.constants.constants import GRAPH_ANIMATION_INTERVAL
 color_list = [Color.BLUE_PRIMARY,Color.GREEN_PRIMARY,Color.RED_PRIMARY,Color.BLACK]
-histogram_type = {"Histogram": MeasurementType.HISTOGRAM,"Start stop":MeasurementType.HISTOGRAM_START_STOP,"Correlation":MeasurementType.HISTOGRAM_CORR}
-
+histogram_type = {"Histogram": MeasurementType.HISTOGRAM,"Start stop":MeasurementType.HISTOGRAM_START_STOP,
+                    "Correlation":MeasurementType.HISTOGRAM_CORR}
+from PyQt5 import QtCore, QtGui
+font = QtGui.QFont("Times", 40, QtGui.QFont.Bold)
 
 class MainWindow(QMainWindow):
     def __init__(
@@ -34,6 +36,7 @@ class MainWindow(QMainWindow):
         self.histo_list = []
         self.builder = TimeTaggerBuilder()
         self._init_interface()
+        self._init_last_timer()
 
     def _init_interface(self):
         self.v_left_layout  = QVBoxLayout()
@@ -50,6 +53,14 @@ class MainWindow(QMainWindow):
         self.selector_histo.activated.connect(self._show_graph)
         v_right_layout.addWidget(self.selector_histo)
         self.selector_histo.setVisible(False)
+
+        box_layout = QGridLayout()
+        box = QGroupBox("Last value")
+        self.max_val = QLabel()
+        self.max_val.setFont(font)
+        box_layout.addWidget(self.max_val)
+        box.setLayout(box_layout)
+        v_right_layout.addWidget(box)
 
         self.main_button_list = []
         box = QGroupBox("Main Channel")
@@ -68,7 +79,7 @@ class MainWindow(QMainWindow):
         box_layout = QVBoxLayout()
         for channel in range(4):
             check = QCheckBox(f"ch {channel+1}")
-            if channel == 1: check.setChecked(True)
+            if channel == 0: check.setChecked(True)
             check.stateChanged.connect(self._show_graph)
             self.check_button_list += [check]
             box_layout.addWidget(check)
@@ -85,6 +96,18 @@ class MainWindow(QMainWindow):
         widget.setLayout(hlayout)
         self.setCentralWidget(widget)
 
+    def _init_last_timer(self):
+        self.max_val.timer = QtCore.QTimer()
+        self.max_val.timer.setInterval(GRAPH_ANIMATION_INTERVAL)
+        self.max_val.timer.timeout.connect(self._update_last)
+        self.max_val.timer.start()
+
+    def _update_last(self):
+        last = self.measurement_service.measurements_data.get_last_value()
+        last_str = ""
+        for value in last :
+            last_str += str(value)+"\n"
+        self.max_val.setText(last_str)
 
     #Switch case called when there is an update with the channels checked or the graph type chossen
     def _show_graph(self):
@@ -102,6 +125,7 @@ class MainWindow(QMainWindow):
                 self.wiget_list = []
                 self.measurement_service.measurements_data.clear()
                 self._update_graph_widget_single()
+
             case "Coincidence rate":
                 self.selector_histo.setVisible(False)
                 for histo in self.histo_list:
@@ -114,6 +138,7 @@ class MainWindow(QMainWindow):
                 self.wiget_list = []
                 self.measurement_service.measurements_data.clear()
                 self._update_graph_widget_coincidence()
+
             case "Coincidence histogram":
                 self.selector_histo.setVisible(True)
                 for histo in self.histo_list:
@@ -130,7 +155,8 @@ class MainWindow(QMainWindow):
                         for j,s_channel in enumerate(self.check_button_list):
                             if s_channel.isChecked():
                                 if j!=i:
-                                    self._update_graph_widget_histogram((i+1,j+1))
+                                    self._update_graph_widget_histogram([i+1,j+1])
+
             case "Single and Coincidence":
                 self.selector_histo.setVisible(False)
                 for histo in self.histo_list:
@@ -139,7 +165,6 @@ class MainWindow(QMainWindow):
                     self.v_left_layout.removeWidget(widget)
                     widget.timer.stop()
                     widget.close()
-
                 self.wiget_list = []
                 self.measurement_service.measurements_data.clear()
                 self._update_graph_widget_single()
@@ -192,7 +217,8 @@ class MainWindow(QMainWindow):
                             coincidence_virtual_channel = self.builder.build_coincidence_virtual_channel(self.timetagger_proxy, channel_list)
                             self.coincidence_list += [coincidence_virtual_channel]
                             v_channel_list += [coincidence_virtual_channel.getChannels()[0]]
-        param = CountRateReqParams(v_channel_list,self.device_serial_number,self.timetagger_proxy,MeasurementType.COINCIDENCES)
+        param = CountRateReqParams(v_channel_list,self.device_serial_number,self.timetagger_proxy,
+                                    MeasurementType.COINCIDENCES)
         w = WidgetInfo("Coincidence Count",line_setup,
                         "Count/s",Color.WHITE_PRIMARY)
         widget = (w, param)

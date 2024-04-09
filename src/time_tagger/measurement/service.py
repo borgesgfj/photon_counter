@@ -63,13 +63,16 @@ class MeasurementService:
                 data =histo_measurement.getData()
                 x = data[:,0]
                 y = data[:,1]
+                histo_measurement.clear()
                 return [x,y]
             case  MeasurementType.HISTOGRAM_CORR :
                 x = histo_measurement.getIndex()
                 y = histo_measurement.getData()
+                histo_measurement.clear()
                 return [x,y]
             case MeasurementType.HISTOGRAM:
                 x = histo_measurement.getIndex()
                 y = histo_measurement.getData()
+                histo_measurement.clear()
                 return [x,y]
             case _: assert 0, "this" + histo_type.value + "correlation class doesn't exist"

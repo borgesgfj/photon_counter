@@ -52,7 +52,7 @@ app_controller = AppController(
 req = app_controller.connect_to_time_taggers_network(
     [
         TimeTaggerAddressInfo(
-            host_address="192.168.10.100",
+            host_address="192.168.1.162",
             port="41101",
             time_tagger_name="Alice_tagger",
         ),
