@@ -1,6 +1,6 @@
 from types import MethodType
-from PyQt5.QtWidgets import QMainWindow, QGridLayout, QComboBox, QCheckBox, QGroupBox,QLabel
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget
+from PyQt5.QtWidgets import QMainWindow, QGridLayout, QComboBox, QCheckBox, QGroupBox, QLabel
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget,QLineEdit,QFormLayout
 from AppController import AppController
 from ui.graphs.RealTimeGraphsWidget import RealTimeGraphsWidget
 from time_tagger.measurement.service import MeasurementService , CountRateReqParams
@@ -54,8 +54,22 @@ class MainWindow(QMainWindow):
         v_right_layout.addWidget(self.selector_histo)
         self.selector_histo.setVisible(False)
 
-        box_layout = QGridLayout()
+        self.bin_params =  QGroupBox("Bin params")
+        layout =QFormLayout()
+        self.n_bin_input = QLineEdit()
+        self.bin_width_input =QLineEdit()
+        layout.addRow("N bins", self.n_bin_input)
+        layout.addRow("Bins width", self.bin_width_input)
+        button = QPushButton("Update")
+        button.clicked.connect(self._show_graph)
+        layout.addWidget(button)
+        self.bin_params.setLayout(layout)
+        v_right_layout.addWidget(self.bin_params)
+        self.bin_params.setVisible(False)
+
+
         box = QGroupBox("Last value")
+        box_layout = QGridLayout()
         self.max_val = QLabel()
         self.max_val.setFont(font)
         box_layout.addWidget(self.max_val)
@@ -67,7 +81,7 @@ class MainWindow(QMainWindow):
         box_layout = QVBoxLayout()
         for channel in range(4):
             check = QCheckBox(f"ch {channel+1}")
-            if channel == 0 or channel == 1 : check.setChecked(True)
+            if channel == 0 or channel ==   1 : check.setChecked(True)
             check.stateChanged.connect(self._show_graph)
             self.main_button_list += [check]
             box_layout.addWidget(check)
@@ -106,6 +120,7 @@ class MainWindow(QMainWindow):
         last = self.measurement_service.measurements_data.get_last_value()
         last_str = ""
         for value in last :
+            # to do add ratio between the average/max and the coincidence
             last_str += str(value)+"\n"
         self.max_val.setText(last_str)
 
@@ -115,6 +130,7 @@ class MainWindow(QMainWindow):
         match graph_type:
             case "Single count":
                 self.selector_histo.setVisible(False)
+                self.bin_params.setVisible(False)
                 for histo in self.histo_list:
                     histo.stop()
                 for widget in self.widget_list:
@@ -127,6 +143,7 @@ class MainWindow(QMainWindow):
                 self._update_graph_widget_single()
 
             case "Coincidence rate":
+                self.bin_params.setVisible(False)
                 self.selector_histo.setVisible(False)
                 for histo in self.histo_list:
                     histo.stop()
@@ -141,6 +158,7 @@ class MainWindow(QMainWindow):
 
             case "Coincidence histogram":
                 self.selector_histo.setVisible(True)
+                self.bin_params.setVisible(True)
                 for histo in self.histo_list:
                     histo.stop()
                 for widget in self.widget_list:
@@ -159,6 +177,7 @@ class MainWindow(QMainWindow):
 
             case "Single and Coincidence":
                 self.selector_histo.setVisible(False)
+                self.bin_params.setVisible(False)
                 for histo in self.histo_list:
                     histo.stop()
                 for widget in self.widget_list:
@@ -235,9 +254,17 @@ class MainWindow(QMainWindow):
         histo_type = histogram_type[self.selector_histo.currentText()]
         param = CountRateReqParams(channels,self.device_serial_number,
                                     self.timetagger_proxy,histo_type )
+        try :
+            param.n_bin = int(self.n_bin_input.text())
+            param.bin_width = int(self.bin_width_input.text())
+            print(param.n_bin,"\n",param.bin_width)
+        except Exception as error:
+            print(error)
+            pass
         histo = self.builder.build_histogram_measurment(param)
         self.histo_list  += [histo]
         param.histogram_measurement = histo
+
         w = WidgetInfo("Coincidence Count",line_setup,
                         "Count",Color.WHITE_PRIMARY,True)
         widget = (w, param)
