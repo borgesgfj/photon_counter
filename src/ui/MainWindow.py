@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
         v_right_layout = QVBoxLayout()
 
         #Add a drop down menu to select the type of plot
-        items = ["Coincidence histogram","Single and Coincidence","Single count","Coincidence rate",]
+        items = ["Single and Coincidence","Coincidence histogram","Single count","Coincidence rate",]
         self.selector = QComboBox()
         self.selector.addItems(items)
         self.selector.activated.connect(self._show_graph)
