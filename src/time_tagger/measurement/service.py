@@ -15,8 +15,8 @@ class CountRateReqParams:
     time_tagger_network_proxy: object
     measurement_type: MeasurementType
     histogram_measurement= None
-    bin_width = 100
-    n_bin = 1000
+    bin_width = 50
+    n_bin = 100
 
 class MeasurementService:
     def __init__(
@@ -47,24 +47,16 @@ class MeasurementService:
             tagger=time_tagger_network_proxy,
             channels=channels,
         ) as cr:
-
             cr.startFor(int(INTEGRATION_TIME), clear=True)
             cr.waitUntilFinished()
-
             counts = cr.getData()
-
             return counts
 
+    #Get the measurement for the correlation histogram
     def getData_histo(self,request_params: CountRateReqParams):
         histo_type = request_params.measurement_type
         histo_measurement =request_params.histogram_measurement
         match histo_type:
-            case  MeasurementType.HISTOGRAM_START_STOP :
-                data =histo_measurement.getData()
-                x = data[:,0]
-                y = data[:,1]
-                histo_measurement.clear()
-                return [x,y]
             case  MeasurementType.HISTOGRAM_CORR :
                 x = histo_measurement.getIndex()
                 y = histo_measurement.getData()

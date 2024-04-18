@@ -6,7 +6,6 @@ class MeasurementType(Enum):
     SINGLE_COUNTS = "SINGLE_COUNTS"
     COINCIDENCES = "COINCIDENCES"
     HISTOGRAM = "HISTOGRAM"
-    HISTOGRAM_START_STOP = "HISTOGRAM_START_STOP"
     HISTOGRAM_CORR = "HISTOGRAM_CORR"
 
 @dataclass
@@ -44,5 +43,5 @@ class MeasurementRepository:
         last = []
         for key in self.measurements_per_device.keys():
             for channel in self.measurements_per_device[key]:
-                last += [channel[-1]]
+                last += [int(channel[-1])]
         return last

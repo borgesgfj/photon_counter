@@ -14,7 +14,8 @@ class RealTimeGraphsWidget(QWidget):
         measaurement_service
     ):
         super().__init__()
-        self.widget_info_list = info_widget_list # List of tuples containing (Widget Info,  CountRateReqParams)
+
+        self.widget_info_list = info_widget_list #maybe not needed anymore because of the refactoring of the main windows
         self.measurement_service = measaurement_service
         self.widget_list = []
         self._init_graph()
@@ -25,12 +26,12 @@ class RealTimeGraphsWidget(QWidget):
         for widget_info in self.widget_info_list:
             graph_widget = GraphWidget2D(widget_info[0])
             x_axis = [] # each plot get a x-axis, maybe not needed ?
-            self.widget_list += [[widget_info[1],graph_widget,x_axis]]
+            self.widget_list += [[widget_info[1],graph_widget,x_axis]] #maybe not needed anymore because of the refactoring of the main windows
             layout.addWidget(graph_widget)
         self.setLayout(layout)
 
     def _update_plots(self):
-        for widget in self.widget_list:
+        for widget in self.widget_list: #maybe not needed anymore because of the refactoring of the main windows
             if widget[1].is_histogram:
                 data = self.measurement_service.getData_histo(widget[0])
                 widget[1].update_lines_data(data[0],[data[1]])

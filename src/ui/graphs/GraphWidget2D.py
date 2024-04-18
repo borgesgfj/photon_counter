@@ -1,7 +1,5 @@
 from dataclasses import dataclass
-
 import pyqtgraph as pg
-
 from ui.styles import Color, axis_label_style, graph_line_style, graph_title_style
 
 
@@ -11,7 +9,7 @@ class GraphLineSetup:
     symbol: str
     color: Color
     # TODO: can be further improved by using namedtuple
-    initial_data: tuple[float, float]
+    initial_data: tuple[list,list] #maybe not needed anymore because of the refactoring of the main windows
 
 """
 Struct to pass the data to init the graph widget
@@ -37,12 +35,11 @@ class GraphWidget2D(pg.PlotWidget):
         self._plotted_lines = self._plot_lines(widget_info.lines)
 
     def _plot_lines(self, lines: list[GraphLineSetup]):
-        # Test to plot the data as an histogram
         if self.is_histogram:
             return [
                 self.plot(
-                    line.initial_data[0][0],
-                    line.initial_data[0][1],
+                    line.initial_data[0],
+                    line.initial_data[1],
                     name=line.label,
                     pen=pg.mkPen(color=line.color.value, width= 0.9),
                     symbol=line.symbol,
@@ -58,8 +55,8 @@ class GraphWidget2D(pg.PlotWidget):
         else:
             return [
                 self.plot(
-                    line.initial_data[0][0],
-                    line.initial_data[0][1],
+                    line.initial_data[0],
+                    line.initial_data[1],
                     name=line.label,
                     pen=pg.mkPen(color=line.color.value, **graph_line_style),
                     symbol=line.symbol,
