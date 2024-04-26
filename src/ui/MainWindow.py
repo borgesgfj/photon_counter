@@ -105,11 +105,15 @@ class MainWindow(QMainWindow):
             check.stateChanged.connect(self._show_graph)
             self.check_button_list += [check]
             box_layout.addWidget(check)
-
-        #Set up the layout
         box.setLayout(box_layout)
         v_right_layout.addWidget(box)
 
+        #Add refresh button
+        refresh = QPushButton("Refresh")
+        refresh.clicked.connect(self._show_graph)
+        v_right_layout.addWidget(refresh)
+
+        #Set up the layout
         hlayout = QHBoxLayout()
         self._show_graph()
         hlayout.addLayout(self.v_left_layout)
