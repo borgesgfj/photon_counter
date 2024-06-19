@@ -50,7 +50,8 @@ class MeasurementRepository:
             self.measurements_per_device: dict[tuple[int, MeasurementType]] = {}
 
     def get_last_value(self,key):
-        return int(self.measurements_per_device[key][-1])
+        if key in self.measurements_per_device.keys():
+            return int(self.measurements_per_device[key][-1])
 
     def save_data(self):
         f= open("save.csv","a")

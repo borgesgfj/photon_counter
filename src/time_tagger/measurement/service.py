@@ -52,6 +52,17 @@ class MeasurementService:
             counts = cr.getData()
             return counts
 
+    def get_accumulated_count(self, channels,time_tagger,aquisition_time):
+        with TT.Countrate(
+            tagger=time_tagger,
+            channels=channels
+        )as cr:
+            cr.startFor(aquisition_time, clear=True)
+            cr.waitUntilFinished()
+            counts = cr.getData()
+            return counts
+
+
     #Get the measurement for the correlation histogram
     def getData_histo(self,request_params: CountRateReqParams):
         histo_type = request_params.measurement_type

@@ -126,11 +126,18 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
     def save_data(self):
-        print("Start save")
-        self.save_timer = QtCore.QTimer()
-        self.save_timer.setInterval(GRAPH_ANIMATION_INTERVAL)
-        self.save_timer.timeout.connect(self.measurement_service.measurements_data.save_data)
-        self.save_timer.start(20*GRAPH_ANIMATION_INTERVAL)
+        channel_list = []
+        with open("save_data.txt","a") as f:
+            for i,m_channel in enumerate(self.main_button_list):
+                if m_channel.isChecked():
+                    channel_list += [i+1]
+            for channel in self.coincidence_list:
+                channel_list += [channel.getChannels()[0]]
+            counts = self.measurement_service.get_accumulated_count(channel_list,self.timetagger_proxy,30*10**12)
+            for value in counts:
+                f.write(f"{value},")
+            f.write("\n")
+
     #Init the timer for the label widget that displya the last value
     def _init_last_timer(self):
         self.box_last_value.timer = QtCore.QTimer()
@@ -170,12 +177,16 @@ class MainWindow(QMainWindow):
             case "Single count":
                 self.selector_histo.setVisible(False)
                 self.bin_params.setVisible(False)
+                self.save.setVisible(True)
+
                 self.update()
                 self._update_graph_widget_single()
 
             case "Coincidence rate":
                 self.bin_params.setVisible(False)
                 self.selector_histo.setVisible(False)
+                self.save.setVisible(True)
+
                 self.update()
                 self.wiget_list = []
                 self._update_graph_widget_coincidence()
@@ -183,6 +194,8 @@ class MainWindow(QMainWindow):
             case "Coincidence histogram":
                 self.selector_histo.setVisible(True)
                 self.bin_params.setVisible(True)
+                self.save.setVisible(False)
+
                 self.update()
                 for i,m_channel in enumerate(self.main_button_list):
                     if m_channel.isChecked():
@@ -194,6 +207,8 @@ class MainWindow(QMainWindow):
             case "Single and Coincidence":
                 self.selector_histo.setVisible(False)
                 self.bin_params.setVisible(False)
+                self.save.setVisible(True)
+
                 self.update()
                 self._update_graph_widget_single()
                 self._update_graph_widget_coincidence()
@@ -201,6 +216,7 @@ class MainWindow(QMainWindow):
             case "Single and Histogram":
                 self.selector_histo.setVisible(True)
                 self.bin_params.setVisible(True)
+                self.save.setVisible(False)
                 self.update()
                 self._update_graph_widget_single()
                 for i,m_channel in enumerate(self.main_button_list):
