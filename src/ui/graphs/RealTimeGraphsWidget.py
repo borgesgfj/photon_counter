@@ -43,7 +43,7 @@ class RealTimeGraphsWidget(QWidget):
             data = self.measurement_service.getData_histo(self.param)
             self.widget.update_lines_data(data[0],[data[1]])
         else:
-            self.x_axis= self._update_x_axis_value(self.x_axis)
+            self.x_axis = self._update_x_axis_value(self.x_axis)
             new_data = self.measurement_service.record_measurement_data(self.param)
             self.widget.update_lines_data(self.x_axis,new_data)
 

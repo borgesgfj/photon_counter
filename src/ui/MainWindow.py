@@ -15,7 +15,7 @@ from PyQt5 import QtCore, QtGui
 color_list = [Color.BLUE_PRIMARY,Color.GREEN_PRIMARY,Color.RED_PRIMARY,Color.BLACK]
 histogram_type = {"Histogram": MeasurementType.HISTOGRAM,"Correlation":MeasurementType.HISTOGRAM_CORR}
 
-font = QtGui.QFont("Times", 40, QtGui.QFont.Bold)
+font = QtGui.QFont("Times", 38, QtGui.QFont.Bold)
 
 class MainWindow(QMainWindow):
     def __init__(
@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
         v_right_layout = QVBoxLayout()
 
         #Add a drop down menu to select the type of plot
-        items = ["Single count","Single and Coincidence","Coincidence histogram","Single count","Coincidence rate",]
+        items = ["Single and Coincidence","Coincidence histogram","Single count","Coincidence rate",]
         self.selector = QComboBox()
         self.selector.addItems(items)
         self.selector.activated.connect(self._show_graph)
@@ -74,13 +74,12 @@ class MainWindow(QMainWindow):
         self.bin_params.setVisible(False)
 
         #Add a label widget that display the last value
-        box = QGroupBox("Last value")
-        box_layout = QGridLayout()
-        self.max_val = QLabel()
-        self.max_val.setFont(font)
-        box_layout.addWidget(self.max_val)
-        box.setLayout(box_layout)
-        v_right_layout.addWidget(box)
+        self.box_last_value = QGroupBox("Last value")
+        self.box_layout_last = QGridLayout()
+        self.last_val = []
+        #box_layout.addWidget(self.max_val)
+        self.box_last_value.setLayout(self.box_layout_last)
+        v_right_layout.addWidget(self.box_last_value)
 
         #Add a 4 check box to selecte witch channels are ploted
         self.main_button_list = []
@@ -126,7 +125,6 @@ class MainWindow(QMainWindow):
         widget.setLayout(hlayout)
         self.setCentralWidget(widget)
 
-
     def save_data(self):
         print("Start save")
         self.save_timer = QtCore.QTimer()
@@ -135,19 +133,22 @@ class MainWindow(QMainWindow):
         self.save_timer.start(20*GRAPH_ANIMATION_INTERVAL)
     #Init the timer for the label widget that displya the last value
     def _init_last_timer(self):
-        self.max_val.timer = QtCore.QTimer()
-        self.max_val.timer.setInterval(GRAPH_ANIMATION_INTERVAL)
-        self.max_val.timer.timeout.connect(self._update_last)
-        self.max_val.timer.start()
+        self.box_last_value.timer = QtCore.QTimer()
+        self.box_last_value.timer.setInterval(GRAPH_ANIMATION_INTERVAL)
+        self.box_last_value.timer.timeout.connect(self._update_last)
+        self.box_last_value.timer.start()
 
     #Function that update the display of the last value
     def _update_last(self):
-        last = self.measurement_service.measurements_data.get_last_value()
-        last_str = ""
-        for value in last :
-            #TODO: add ratio between the average/max and the coincidence
-            last_str += str(value)+"\n"
-        self.max_val.setText(last_str)
+        for label in self.last_val:
+            value = self.measurement_service.measurements_data.get_last_value(label[2])
+            label[0].setText(label[1]+f": {value}")
+        # last = self.measurement_service.measurements_data.get_last_value()
+        # last_str = ""
+        # for value in last :
+        #     #TODO: add ratio between the average/max and the coincidence
+        #     last_str += value[0]+':'+str(value[1])+"\n"
+        # self.max_val.setText(last_str)
 
     #Switch case called when there is an update with the channels checked or the graph type chossen
     def _show_graph(self):
@@ -159,6 +160,11 @@ class MainWindow(QMainWindow):
             widget.close()
         self.wiget_list = []
         self.measurement_service.measurements_data.clear()
+
+        for label  in self.last_val:
+            self.box_layout_last.removeWidget(label[0])
+        self.last_val = []
+
         #Match case with the current text of the drop down menu
         match graph_type:
             case "Single count":
@@ -222,6 +228,11 @@ class MainWindow(QMainWindow):
                 channel_list +=[i+1]
                 color_count += 1
                 if color_count > len(color_list)-1: color_count = 0
+                label = QLabel()
+                label.setFont(font)
+                key=(i+1,MeasurementType.SINGLE_COUNTS)
+                self.last_val += [(label,f"ch.{i+1}",key)]
+                self.box_layout_last.addWidget(label)
         param = CountRateReqParams(channel_list,self.device_serial_number,self.timetagger_proxy,MeasurementType.SINGLE_COUNTS)
         widget_info = WidgetInfo("Single Count",line_setup,
                         "Count/s",Color.WHITE_PRIMARY)
@@ -253,6 +264,11 @@ class MainWindow(QMainWindow):
                             coincidence_virtual_channel = self.builder.build_coincidence_virtual_channel(self.timetagger_proxy, [i+1,j+1])
                             self.coincidence_list += [coincidence_virtual_channel]
                             v_channel_list += [coincidence_virtual_channel.getChannels()[0]]
+                            label = QLabel()
+                            label.setFont(font)
+                            key = (coincidence_virtual_channel.getChannels()[0],MeasurementType.COINCIDENCES)
+                            self.last_val += [(label,f" ch.{i+1}/{j+1}",key)]
+                            self.box_layout_last.addWidget(label)
         param = CountRateReqParams(v_channel_list,self.device_serial_number,self.timetagger_proxy,
                                     MeasurementType.COINCIDENCES)
         widget_info = WidgetInfo("Coincidence Count",line_setup,
@@ -275,7 +291,8 @@ class MainWindow(QMainWindow):
         try :
             param.n_bin = int(self.n_bin_input.text())
             param.bin_width = int(self.bin_width_input.text())
-            print(param.n_bin,"\n",param.bin_width)
+            print("N bins",param.n_bin)
+            print("Bins width",param.bin_width)
         except Exception as error:
             print(error)
         histo = self.builder.build_histogram_measurment(param)
@@ -286,3 +303,7 @@ class MainWindow(QMainWindow):
         graph_widget = RealTimeGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
         self.widget_list += [graph_widget]
         self.v_left_layout.addWidget(graph_widget)
+        # label = QLabel()
+        # key = (channels,histo_type)
+        # self.last_val += [(label,f" ch.{channels}",key)]
+        # self.box_layout_last.addWidget(label)
