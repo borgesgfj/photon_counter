@@ -18,9 +18,10 @@ class UpsertDataParams:
 
 class MeasurementRepository:
     def __init__(self) -> None:
-        self.measurements_per_device: dict[tuple[str, MeasurementType]] = {}
+        self.measurements_per_device: dict[tuple[int, MeasurementType]] = {}
 
     def upsert_data(self, params: UpsertDataParams):
+        """
         measurement_key = (params.device_serial, params.measurement_type)
 
         if measurement_key not in self.measurements_per_device:
@@ -29,19 +30,37 @@ class MeasurementRepository:
             ]
 
         for index, value in enumerate(params.data):
-            recorded_data = self.measurements_per_device[measurement_key][index]
+            recorded_data = self.measurements_per_device[key][index]
             recorded_data.append(value)
             if len(recorded_data) > 50:
                 recorded_data.pop(0)
-
-        return self.measurements_per_device[measurement_key]
+        """
+        r = []
+        for index, value in enumerate(params.data):
+            key = (params.channels[index],params.measurement_type)
+            if key not in self.measurements_per_device.keys():
+                self.measurements_per_device[key] = []
+            recorded_data = self.measurements_per_device[key]
+            recorded_data.append(value)
+            if len(recorded_data) > 50:
+                recorded_data.pop(0)
+            r += [recorded_data]
+        return r
 
     def clear(self):
-            self.measurements_per_device: dict[tuple[str, MeasurementType]] = {}
+            self.measurements_per_device: dict[tuple[int, MeasurementType]] = {}
 
     def get_last_value(self):
         last = []
-        for key in self.measurements_per_device.keys():
-            for channel in self.measurements_per_device[key]:
-                last += [int(channel[-1])]
+        for value in self.measurements_per_device.values():
+            last += [int(value[-1])]
+
         return last
+
+    def save_data(self):
+        f= open("save.csv","a")
+        print("saving")
+        for value in self.measurements_per_device.values():
+            f.write(f"{value[-1]},")
+        f.write("\n")
+        f.close()

@@ -6,7 +6,7 @@ from time_tagger.measurement.repository import (
     UpsertDataParams,
     MeasurementType,
 )
-
+import numpy as np
 
 @dataclass
 class CountRateReqParams:
@@ -15,8 +15,8 @@ class CountRateReqParams:
     time_tagger_network_proxy: object
     measurement_type: MeasurementType
     histogram_measurement= None
-    bin_width = 50
-    n_bin = 100
+    bin_width = 5000
+    n_bin = 20
 
 class MeasurementService:
     def __init__(
@@ -61,10 +61,22 @@ class MeasurementService:
                 x = histo_measurement.getIndex()
                 y = histo_measurement.getData()
                 histo_measurement.clear()
+                self.measurements_data.upsert_data(
+                    UpsertDataParams(
+                        channels=request_params.channels,
+                        data=[max(y),x[np.argmax(y)]],
+                        device_serial=request_params.device_serial,
+                        measurement_type=request_params.measurement_type,))
                 return [x,y]
             case MeasurementType.HISTOGRAM:
                 x = histo_measurement.getIndex()
                 y = histo_measurement.getData()
                 histo_measurement.clear()
+                self.measurements_data.upsert_data(
+                    UpsertDataParams(
+                        channels=request_params.channels,
+                        data=[max(y),x[np.argmax(y)]],
+                        device_serial=request_params.device_serial,
+                        measurement_type=request_params.measurement_type,))
                 return [x,y]
             case _: assert 0, "this" + histo_type.value + "correlation class doesn't exist"

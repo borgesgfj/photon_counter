@@ -72,6 +72,7 @@ class GraphWidget2D(pg.PlotWidget):
         self.showGrid(x=True, y=True)
         self.setMouseEnabled(x=False, y=True)
 
+
     def update_lines_data(
         self, new_x_data: list[int], new_lines_y_data: list[list[float]]
     ):

@@ -18,12 +18,15 @@ class RealTimeGraphsWidget(QWidget):
         self.widget_info_list = info_widget_list #maybe not needed anymore because of the refactoring of the main windows
         self.measurement_service = measaurement_service
         self.widget_list = []
+        self.timer_delay = 1
         self._init_graph()
         self._update_graph_event()
 
     def _init_graph(self):
         layout = QVBoxLayout(self)
         for widget_info in self.widget_info_list:
+            if widget_info[0].is_histogram:
+                self.timer_delay = 4
             graph_widget = GraphWidget2D(widget_info[0])
             x_axis = [] # each plot get a x-axis, maybe not needed ?
             self.widget_list += [[widget_info[1],graph_widget,x_axis]] #maybe not needed anymore because of the refactoring of the main windows
@@ -42,7 +45,7 @@ class RealTimeGraphsWidget(QWidget):
 
     def _update_graph_event(self):
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(GRAPH_ANIMATION_INTERVAL)
+        self.timer.setInterval(GRAPH_ANIMATION_INTERVAL*self.timer_delay)
         self.timer.timeout.connect(self._update_plots)
         self.timer.start()
 

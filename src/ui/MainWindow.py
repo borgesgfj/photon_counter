@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
         v_right_layout = QVBoxLayout()
 
         #Add a drop down menu to select the type of plot
-        items = ["Single and Coincidence","Coincidence histogram","Single count","Coincidence rate",]
+        items = ["Single count","Single and Coincidence","Coincidence histogram","Single count","Coincidence rate",]
         self.selector = QComboBox()
         self.selector.addItems(items)
         self.selector.activated.connect(self._show_graph)
@@ -86,7 +86,7 @@ class MainWindow(QMainWindow):
         self.main_button_list = []
         box = QGroupBox("Main Channel")
         box_layout = QVBoxLayout()
-        for channel in range(4):
+        for channel in range(4 ):
             check = QCheckBox(f"ch {channel+1}")
             if channel == 0 or channel ==   1 : check.setChecked(True)
             check.stateChanged.connect(self._show_graph)
@@ -113,6 +113,9 @@ class MainWindow(QMainWindow):
         refresh.clicked.connect(self._show_graph)
         v_right_layout.addWidget(refresh)
 
+        self.save =QPushButton("Save")
+        self.save.clicked.connect(self.save_data)
+        v_right_layout.addWidget(self.save)
         #Set up the layout
         hlayout = QHBoxLayout()
         self._show_graph()
@@ -123,6 +126,13 @@ class MainWindow(QMainWindow):
         widget.setLayout(hlayout)
         self.setCentralWidget(widget)
 
+
+    def save_data(self):
+        print("Start save")
+        self.save_timer = QtCore.QTimer()
+        self.save_timer.setInterval(GRAPH_ANIMATION_INTERVAL)
+        self.save_timer.timeout.connect(self.measurement_service.measurements_data.save_data)
+        self.save_timer.start(20*GRAPH_ANIMATION_INTERVAL)
     #Init the timer for the label widget that displya the last value
     def _init_last_timer(self):
         self.max_val.timer = QtCore.QTimer()
@@ -181,6 +191,19 @@ class MainWindow(QMainWindow):
                 self.update()
                 self._update_graph_widget_single()
                 self._update_graph_widget_coincidence()
+
+            case "Single and Histogram":
+                self.selector_histo.setVisible(True)
+                self.bin_params.setVisible(True)
+                self.update()
+                self._update_graph_widget_single()
+                for i,m_channel in enumerate(self.main_button_list):
+                    if m_channel.isChecked():
+                        for j,s_channel in enumerate(self.check_button_list):
+                            if s_channel.isChecked():
+                                if j!=i:
+                                    self._update_graph_widget_histogram([i+1,j+1])
+
             case _: assert 0, "Unreachable"
 
     #Update the graph to the single count rate
@@ -213,12 +236,13 @@ class MainWindow(QMainWindow):
         color_count = 0
         self.coincidence_list = []
         v_channel_list = []
+        channel_list =[]
         for i,m_channel in enumerate(self.main_button_list):
             if m_channel.isChecked():
                 for j,s_channel in enumerate(self.check_button_list):
                     if s_channel.isChecked():
-                        if i != j: #select only if the channels are different, will need refactoring when we have two timetagger
-                            channel_list = [i+1,j+1]
+                        if i != j and (j+1,i+1) not in channel_list : #select only if the channels are different, will need refactoring when we have two timetagger
+                            channel_list += [(i+1,j+1)]
                             line_setup += [ GraphLineSetup(
                                             label=f"ch.{i+1}/{j+1}",
                                             symbol="s",
@@ -226,7 +250,7 @@ class MainWindow(QMainWindow):
                                             initial_data=([0.0],[0]))]
                             color_count += 1
                             if color_count > len(color_list)-1: color_count = 0
-                            coincidence_virtual_channel = self.builder.build_coincidence_virtual_channel(self.timetagger_proxy, channel_list)
+                            coincidence_virtual_channel = self.builder.build_coincidence_virtual_channel(self.timetagger_proxy, [i+1,j+1])
                             self.coincidence_list += [coincidence_virtual_channel]
                             v_channel_list += [coincidence_virtual_channel.getChannels()[0]]
         param = CountRateReqParams(v_channel_list,self.device_serial_number,self.timetagger_proxy,
@@ -254,7 +278,6 @@ class MainWindow(QMainWindow):
             print(param.n_bin,"\n",param.bin_width)
         except Exception as error:
             print(error)
-            pass
         histo = self.builder.build_histogram_measurment(param)
         param.histogram_measurement = histo
         w = WidgetInfo("Coincidence Count",line_setup,
