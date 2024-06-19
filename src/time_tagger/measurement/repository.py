@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
 
-
 class MeasurementType(Enum):
     SINGLE_COUNTS = "SINGLE_COUNTS"
     COINCIDENCES = "COINCIDENCES"
@@ -50,12 +49,8 @@ class MeasurementRepository:
     def clear(self):
             self.measurements_per_device: dict[tuple[int, MeasurementType]] = {}
 
-    def get_last_value(self):
-        last = []
-        for value in self.measurements_per_device.values():
-            last += [int(value[-1])]
-
-        return last
+    def get_last_value(self,key):
+        return int(self.measurements_per_device[key][-1])
 
     def save_data(self):
         f= open("save.csv","a")
