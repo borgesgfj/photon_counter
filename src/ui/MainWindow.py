@@ -223,10 +223,10 @@ class MainWindow(QMainWindow):
                 color_count += 1
                 if color_count > len(color_list)-1: color_count = 0
         param = CountRateReqParams(channel_list,self.device_serial_number,self.timetagger_proxy,MeasurementType.SINGLE_COUNTS)
-        w = WidgetInfo("Single Count",line_setup,
+        widget_info = WidgetInfo("Single Count",line_setup,
                         "Count/s",Color.WHITE_PRIMARY)
-        widget = (w, param)
-        graph_widget = RealTimeGraphsWidget([widget],measaurement_service= self.measurement_service)
+        #widget = (w, param)
+        graph_widget = RealTimeGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
         self.widget_list += [graph_widget]
         self.v_left_layout.addWidget(graph_widget)
 
@@ -255,10 +255,10 @@ class MainWindow(QMainWindow):
                             v_channel_list += [coincidence_virtual_channel.getChannels()[0]]
         param = CountRateReqParams(v_channel_list,self.device_serial_number,self.timetagger_proxy,
                                     MeasurementType.COINCIDENCES)
-        w = WidgetInfo("Coincidence Count",line_setup,
+        widget_info = WidgetInfo("Coincidence Count",line_setup,
                         "Count/s",Color.WHITE_PRIMARY)
-        widget = (w, param)
-        graph_widget = RealTimeGraphsWidget([widget],measaurement_service= self.measurement_service)
+
+        graph_widget = RealTimeGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
         self.widget_list += [graph_widget]
         self.v_left_layout.addWidget(graph_widget)
 
@@ -280,9 +280,9 @@ class MainWindow(QMainWindow):
             print(error)
         histo = self.builder.build_histogram_measurment(param)
         param.histogram_measurement = histo
-        w = WidgetInfo("Coincidence Count",line_setup,
+        widget_info = WidgetInfo("Coincidence Count",line_setup,
                         "Count",Color.WHITE_PRIMARY,True)
-        widget = (w, param)
-        graph_widget = RealTimeGraphsWidget([widget],measaurement_service= self.measurement_service)
+        #widget = (w, param)
+        graph_widget = RealTimeGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
         self.widget_list += [graph_widget]
         self.v_left_layout.addWidget(graph_widget)
