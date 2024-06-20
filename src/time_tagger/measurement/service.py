@@ -62,7 +62,6 @@ class MeasurementService:
             counts = cr.getData()
             return counts
 
-
     #Get the measurement for the correlation histogram
     def getData_histo(self,request_params: CountRateReqParams):
         histo_type = request_params.measurement_type
@@ -72,22 +71,16 @@ class MeasurementService:
                 x = histo_measurement.getIndex()
                 y = histo_measurement.getData()
                 histo_measurement.clear()
-                self.measurements_data.upsert_data(
-                    UpsertDataParams(
-                        channels=request_params.channels,
-                        data=[max(y),x[np.argmax(y)]],
-                        device_serial=request_params.device_serial,
-                        measurement_type=request_params.measurement_type,))
+                key = (request_params.histogram_measurement,request_params.measurement_type)
+                data=(max(y),x[np.argmax(y)])
+                self.measurements_data.save_data_histo(key,data)
                 return [x,y]
             case MeasurementType.HISTOGRAM:
                 x = histo_measurement.getIndex()
                 y = histo_measurement.getData()
                 histo_measurement.clear()
-                self.measurements_data.upsert_data(
-                    UpsertDataParams(
-                        channels=request_params.channels,
-                        data=[max(y),x[np.argmax(y)]],
-                        device_serial=request_params.device_serial,
-                        measurement_type=request_params.measurement_type,))
+                key = (request_params.histogram_measurement,request_params.measurement_type)
+                data=(max(y),x[np.argmax(y)])
+                self.measurements_data.save_data_histo(key,data)
                 return [x,y]
             case _: assert 0, "this" + histo_type.value + "correlation class doesn't exist"

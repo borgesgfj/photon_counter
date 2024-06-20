@@ -66,11 +66,9 @@ print(req.connection_failed_devices, "connection failed devices", end="\n\n")
 tagger = req.connected_devices[0].tagger_proxy
 connected_device_name = req.connected_devices[0].time_tagger_name
 
-coincidence_virtual_channel = time_tagger_builder.build_coincidence_virtual_channel(
-    tagger, channels
-)
 
-cc_virtual_channel_numbers = coincidence_virtual_channel.getChannels()
+
+
 
 set_trigger_level_res = app_controller.set_time_tagger_channels_trigger_level(
     SetTriggerLevelParams(
@@ -91,11 +89,9 @@ print(serial, "serial number of connceted TT", end="\n\n")
 
 app = QtWidgets.QApplication(sys.argv)
 window = MainWindow(
-    channels=channels,
     device_serial_number=serial,
     timetagger_proxy=tagger,
     app_controller=app_controller,
-    coincidence_virtual_channels=cc_virtual_channel_numbers,
     measurement_service=time_tagger_measurement_service,
 )
 

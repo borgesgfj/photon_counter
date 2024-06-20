@@ -15,15 +15,13 @@ from PyQt5 import QtCore, QtGui
 color_list = [Color.BLUE_PRIMARY,Color.GREEN_PRIMARY,Color.RED_PRIMARY,Color.BLACK]
 histogram_type = {"Histogram": MeasurementType.HISTOGRAM,"Correlation":MeasurementType.HISTOGRAM_CORR}
 
-font = QtGui.QFont("Times", 38, QtGui.QFont.Bold)
+font = QtGui.QFont("Times", 26, QtGui.QFont.Bold)
 
 class MainWindow(QMainWindow):
     def __init__(
         self,
         timetagger_proxy,
         device_serial_number,
-        channels,
-        coincidence_virtual_channels,
         app_controller: AppController,
         measurement_service: MeasurementService,
         *args,
@@ -77,7 +75,6 @@ class MainWindow(QMainWindow):
         self.box_last_value = QGroupBox("Last value")
         self.box_layout_last = QGridLayout()
         self.last_val = []
-        #box_layout.addWidget(self.max_val)
         self.box_last_value.setLayout(self.box_layout_last)
         v_right_layout.addWidget(self.box_last_value)
 
@@ -112,9 +109,11 @@ class MainWindow(QMainWindow):
         refresh.clicked.connect(self._show_graph)
         v_right_layout.addWidget(refresh)
 
+        #Add save button
         self.save =QPushButton("Save")
         self.save.clicked.connect(self.save_data)
         v_right_layout.addWidget(self.save)
+
         #Set up the layout
         hlayout = QHBoxLayout()
         self._show_graph()
@@ -149,13 +148,11 @@ class MainWindow(QMainWindow):
     def _update_last(self):
         for label in self.last_val:
             value = self.measurement_service.measurements_data.get_last_value(label[2])
-            label[0].setText(label[1]+f": {value}")
-        # last = self.measurement_service.measurements_data.get_last_value()
-        # last_str = ""
-        # for value in last :
-        #     #TODO: add ratio between the average/max and the coincidence
-        #     last_str += value[0]+':'+str(value[1])+"\n"
-        # self.max_val.setText(last_str)
+            if isinstance(value,tuple):
+                label[0].setText(label[1]+f": {value[0]},{value[1]}")
+            else:
+                label[0].setText(label[1]+f": {int(value)}")
+
 
     #Switch case called when there is an update with the channels checked or the graph type chossen
     def _show_graph(self):
@@ -316,10 +313,10 @@ class MainWindow(QMainWindow):
         widget_info = WidgetInfo("Coincidence Count",line_setup,
                         "Count",Color.WHITE_PRIMARY,True)
         #widget = (w, param)
-        graph_widget = RealTimeGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
+        graph_widget = RealTimeGraphsWidget(widget_info,param,measaurement_service = self.measurement_service)
         self.widget_list += [graph_widget]
         self.v_left_layout.addWidget(graph_widget)
-        # label = QLabel()
-        # key = (channels,histo_type)
-        # self.last_val += [(label,f" ch.{channels}",key)]
-        # self.box_layout_last.addWidget(label)
+        label = QLabel()
+        key = (histo,histo_type)
+        self.last_val += [(label,f" ch.{channels}",key)]
+        self.box_layout_last.addWidget(label)

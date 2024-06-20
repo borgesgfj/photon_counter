@@ -20,20 +20,6 @@ class MeasurementRepository:
         self.measurements_per_device: dict[tuple[int, MeasurementType]] = {}
 
     def upsert_data(self, params: UpsertDataParams):
-        """
-        measurement_key = (params.device_serial, params.measurement_type)
-
-        if measurement_key not in self.measurements_per_device:
-            self.measurements_per_device[measurement_key] = [
-                [] for channel in params.channels
-            ]
-
-        for index, value in enumerate(params.data):
-            recorded_data = self.measurements_per_device[key][index]
-            recorded_data.append(value)
-            if len(recorded_data) > 50:
-                recorded_data.pop(0)
-        """
         r = []
         for index, value in enumerate(params.data):
             key = (params.channels[index],params.measurement_type)
@@ -46,12 +32,15 @@ class MeasurementRepository:
             r += [recorded_data]
         return r
 
+    def save_data_histo(self,key,data):
+         self.measurements_per_device[key]=[data]
+
     def clear(self):
-            self.measurements_per_device: dict[tuple[int, MeasurementType]] = {}
+        self.measurements_per_device: dict[tuple[int, MeasurementType]] = {}
 
     def get_last_value(self,key):
         if key in self.measurements_per_device.keys():
-            return int(self.measurements_per_device[key][-1])
+            return self.measurements_per_device[key][-1]
 
     def save_data(self):
         f= open("save.csv","a")
