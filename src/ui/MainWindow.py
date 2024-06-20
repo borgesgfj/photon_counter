@@ -148,10 +148,11 @@ class MainWindow(QMainWindow):
     def _update_last(self):
         for label in self.last_val:
             value = self.measurement_service.measurements_data.get_last_value(label[2])
-            if isinstance(value,tuple):
-                label[0].setText(label[1]+f": {value[0]},{value[1]}")
-            else:
-                label[0].setText(label[1]+f": {int(value)}")
+            if value:
+                if isinstance(value,tuple):
+                    label[0].setText(label[1]+f": {value[0]},{value[1]}")
+                else:
+                    label[0].setText(label[1]+f": {int(value)}")
 
 
     #Switch case called when there is an update with the channels checked or the graph type chossen
