@@ -1,6 +1,6 @@
 from types import MethodType
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QComboBox, QCheckBox, QGroupBox, QLabel
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget,QLineEdit,QFormLayout
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget,QLineEdit,QFormLayout,QStackedLayout
 from AppController import AppController
 from ui.graphs.RealTimeGraphsWidget import RealTimeGraphsWidget
 from time_tagger.measurement.service import MeasurementService , CountRateReqParams
@@ -15,7 +15,7 @@ from PyQt5 import QtCore, QtGui
 color_list = [Color.BLUE_PRIMARY,Color.GREEN_PRIMARY,Color.RED_PRIMARY,Color.BLACK]
 histogram_type = {"Histogram": MeasurementType.HISTOGRAM,"Correlation":MeasurementType.HISTOGRAM_CORR}
 
-font = QtGui.QFont("Times", 26, QtGui.QFont.Bold)
+font = QtGui.QFont("Times", 24, QtGui.QFont.Bold)
 
 class MainWindow(QMainWindow):
     def __init__(
@@ -37,13 +37,11 @@ class MainWindow(QMainWindow):
         self._init_interface()
         self._init_last_timer()
 
-    #Initialize the main window
-    def _init_interface(self):
-        self.v_left_layout  = QVBoxLayout()
+    def _init_right_layout(self):
         v_right_layout = QVBoxLayout()
 
         #Add a drop down menu to select the type of plot
-        items = ["Single and Coincidence","Coincidence histogram","Single count","Coincidence rate",]
+        items = ["Coincidence histogram","Single count","Coincidence rate","Single and Coincidence",]
         self.selector = QComboBox()
         self.selector.addItems(items)
         self.selector.activated.connect(self._show_graph)
@@ -84,7 +82,7 @@ class MainWindow(QMainWindow):
         box_layout = QVBoxLayout()
         for channel in range(4 ):
             check = QCheckBox(f"ch {channel+1}")
-            if channel == 0 or channel ==   1 : check.setChecked(True)
+            if channel == 1 or channel == 2 : check.setChecked(True)
             check.stateChanged.connect(self._show_graph)
             self.main_button_list += [check]
             box_layout.addWidget(check)
@@ -97,7 +95,7 @@ class MainWindow(QMainWindow):
         box_layout = QVBoxLayout()
         for channel in range(4):
             check = QCheckBox(f"ch {channel+1}")
-            if channel == 0: check.setChecked(True)
+            if channel == 1 or channel==2: check.setChecked(True)
             check.stateChanged.connect(self._show_graph)
             self.check_button_list += [check]
             box_layout.addWidget(check)
@@ -114,16 +112,52 @@ class MainWindow(QMainWindow):
         self.save.clicked.connect(self.save_data)
         v_right_layout.addWidget(self.save)
 
-        #Set up the layout
+        return v_right_layout
+    #Initialize the main window
+    def _init_interface(self):
+
+
+        v_right_layout = self._init_right_layout()
+
+        #Add a second page to the right layout to add a delay input
+        main_r_box = QGroupBox()
+        main_r_box.setLayout(v_right_layout)
+
+        second_r_box = QGroupBox()
+        second_r_box_layout = QFormLayout()
+        self.selector_2 = QComboBox()
+        self.selector_2.addItems(['1','2','3','4'])
+        second_r_box_layout.addRow("Select Channel",self.selector_2)
+        self.delay_input = QLineEdit()
+        second_r_box_layout.addRow("Input delay",self.delay_input)
+        button = QPushButton("Confirm")
+        button.clicked.connect(self._add_delay)
+        second_r_box_layout.addWidget(button)
+        second_r_box.setLayout(second_r_box_layout)
+
+        self.stack_layout = QStackedLayout()
+        self.stack_layout.addWidget(main_r_box)
+        self.stack_layout.addWidget(second_r_box)
+        main_v_layout = QVBoxLayout()
+        self.pageComboBox = QComboBox()
+        self.pageComboBox.addItem("Page 1")
+        self.pageComboBox.addItem("Page 2")
+        self.pageComboBox.activated.connect(self.stack_layout.setCurrentIndex)
+        main_v_layout.addWidget(self.pageComboBox)
+        main_v_layout.addLayout(self.stack_layout)
+
+
+        self.v_left_layout  = QVBoxLayout()
+        #Set up the main layout
         hlayout = QHBoxLayout()
         self._show_graph()
         hlayout.addLayout(self.v_left_layout)
-        hlayout.addLayout(v_right_layout)
-
+        hlayout.addLayout(main_v_layout)
         widget = QWidget()
         widget.setLayout(hlayout)
         self.setCentralWidget(widget)
 
+    #Function that save the data
     def save_data(self):
         channel_list = []
         with open("save_data.txt","a") as f:
@@ -155,6 +189,13 @@ class MainWindow(QMainWindow):
                     label[0].setText(label[1]+f": {int(value)}")
 
 
+    def _add_delay(self):
+        channel = self.selector_2.currentIndex()+1
+        try :
+            delay = int(self.delay_input.text())
+            self.timetagger_proxy.setInputDelay(channel,delay)
+        except :
+            pass
     #Switch case called when there is an update with the channels checked or the graph type chossen
     def _show_graph(self):
         graph_type = self.selector.currentText()
@@ -237,8 +278,7 @@ class MainWindow(QMainWindow):
                 line_setup += [ GraphLineSetup(
                                 label=f"ch.{i+1}",
                                 symbol="s",
-                                color=color_list[color_count],
-                                initial_data=([0.0],[0]) )]
+                                color=color_list[color_count])]
                 channel_list +=[i+1]
                 color_count += 1
                 if color_count > len(color_list)-1: color_count = 0
@@ -271,8 +311,7 @@ class MainWindow(QMainWindow):
                             line_setup += [ GraphLineSetup(
                                             label=f"ch.{i+1}/{j+1}",
                                             symbol="s",
-                                            color=color_list[color_count],
-                                            initial_data=([0.0],[0]))]
+                                            color=color_list[color_count])]
                             color_count += 1
                             if color_count > len(color_list)-1: color_count = 0
                             coincidence_virtual_channel = self.builder.build_coincidence_virtual_channel(self.timetagger_proxy, [i+1,j+1])
@@ -297,8 +336,7 @@ class MainWindow(QMainWindow):
         line_setup = [ GraphLineSetup(
                         label=f"ch.{channels}",
                         symbol="s",
-                        color=Color.RED_PRIMARY,
-                        initial_data=([0.0],[0]))]
+                        color=Color.RED_PRIMARY)]
         histo_type = histogram_type[self.selector_histo.currentText()]
         param = CountRateReqParams(channels,self.device_serial_number,
                                     self.timetagger_proxy,histo_type )
