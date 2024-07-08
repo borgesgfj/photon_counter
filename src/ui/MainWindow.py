@@ -116,7 +116,6 @@ class MainWindow(QMainWindow):
     #Initialize the main window
     def _init_interface(self):
 
-
         v_right_layout = self._init_right_layout()
 
         #Add a second page to the right layout to add a delay input
@@ -130,9 +129,18 @@ class MainWindow(QMainWindow):
         second_r_box_layout.addRow("Select Channel",self.selector_2)
         self.delay_input = QLineEdit()
         second_r_box_layout.addRow("Input delay",self.delay_input)
+
         button = QPushButton("Confirm")
         button.clicked.connect(self._add_delay)
         second_r_box_layout.addWidget(button)
+
+        self.delay_list = []
+        for i in range(4):
+            label =QLabel()
+            delay = self.timetagger_proxy.getInputDelay(i+1)
+            label.setText(f"{delay}")
+            self.delay_list += [label]
+            second_r_box_layout.addRow(f"Ch{i+1}",label)
         second_r_box.setLayout(second_r_box_layout)
 
         self.stack_layout = QStackedLayout()
@@ -194,6 +202,7 @@ class MainWindow(QMainWindow):
         try :
             delay = int(self.delay_input.text())
             self.timetagger_proxy.setInputDelay(channel,delay)
+            self.delay_list[channel-1].setText(f"{delay}")
         except :
             pass
     #Switch case called when there is an update with the channels checked or the graph type chossen
