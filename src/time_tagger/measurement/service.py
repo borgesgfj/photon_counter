@@ -15,7 +15,7 @@ class CountRateReqParams:
     time_tagger_network_proxy: object
     measurement_type: MeasurementType
     histogram_measurement= None
-    bin_width = 5000
+    bin_width = 50
     n_bin = 20
 
 class MeasurementService:
@@ -59,7 +59,7 @@ class MeasurementService:
         )as cr:
             cr.startFor(aquisition_time, clear=True)
             cr.waitUntilFinished()
-            counts = cr.getData()
+            counts = cr.getCountsTotal()
             return counts
 
     #Get the measurement for the correlation histogram
