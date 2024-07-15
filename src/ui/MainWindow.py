@@ -226,7 +226,7 @@ class MainWindow(QMainWindow):
                 self.selector_histo.setVisible(False)
                 self.bin_params.setVisible(False)
                 self.save.setVisible(True)
-
+                self.coincidence_list = []
                 self.update()
                 self._update_graph_widget_single()
 
@@ -234,15 +234,14 @@ class MainWindow(QMainWindow):
                 self.bin_params.setVisible(False)
                 self.selector_histo.setVisible(False)
                 self.save.setVisible(True)
-
                 self.update()
-                self.wiget_list = []
                 self._update_graph_widget_coincidence()
 
             case "Coincidence histogram":
                 self.selector_histo.setVisible(True)
                 self.bin_params.setVisible(True)
                 self.save.setVisible(False)
+                self.coincidence_list = []
 
                 self.update()
                 for i,m_channel in enumerate(self.main_button_list):
@@ -265,6 +264,7 @@ class MainWindow(QMainWindow):
                 self.selector_histo.setVisible(True)
                 self.bin_params.setVisible(True)
                 self.save.setVisible(False)
+                self.coincidence_list = []
                 self.update()
                 self._update_graph_widget_single()
                 for i,m_channel in enumerate(self.main_button_list):
