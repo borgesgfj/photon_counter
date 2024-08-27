@@ -79,14 +79,20 @@ class MainWindow(QMainWindow):
         #Add a 4 check box to selecte witch channels are ploted
         self.main_button_list = []
         box = QGroupBox("Main Channel")
-        box_layout = QVBoxLayout()
+        box_layout = QGridLayout()
+        line = 0
+        collum =0
         for channel in range(4 ):
             check = QCheckBox(f"ch {channel+1}")
             # if channel == 1 or channel == 2 : check.setChecked(True)
             check.setChecked(True)
             check.stateChanged.connect(self._show_graph)
             self.main_button_list += [check]
-            box_layout.addWidget(check)
+            box_layout.addWidget(check,line,collum)
+            collum +=1
+            if collum>1:
+                line +=1
+                collum =0
         box.setLayout(box_layout)
         v_right_layout.addWidget(box)
 
