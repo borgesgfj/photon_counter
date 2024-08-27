@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui
 
 color_list = [Color.BLUE_PRIMARY,Color.GREEN_PRIMARY,Color.RED_PRIMARY,Color.BLACK]
 histogram_type = {"Histogram": MeasurementType.HISTOGRAM,"Correlation":MeasurementType.HISTOGRAM_CORR}
-
+coincidence_list = [[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]]
 font = QtGui.QFont("Times", 24, QtGui.QFont.Bold)
 
 class MainWindow(QMainWindow):
@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
         v_right_layout = QVBoxLayout()
 
         #Add a drop down menu to select the type of plot
-        items = ["Coincidence histogram","Single count","Coincidence rate","Single and Coincidence",]
+        items = ["Single and Coincidence","Single count","Coincidence rate","Coincidence histogram",]
         self.selector = QComboBox()
         self.selector.addItems(items)
         self.selector.activated.connect(self._show_graph)
@@ -82,23 +82,34 @@ class MainWindow(QMainWindow):
         box_layout = QVBoxLayout()
         for channel in range(4 ):
             check = QCheckBox(f"ch {channel+1}")
-            if channel == 1 or channel == 2 : check.setChecked(True)
+            # if channel == 1 or channel == 2 : check.setChecked(True)
+            check.setChecked(True)
             check.stateChanged.connect(self._show_graph)
             self.main_button_list += [check]
             box_layout.addWidget(check)
         box.setLayout(box_layout)
         v_right_layout.addWidget(box)
 
-        #Add a 4 check box to selecte witch channels is used for the coincidence with the main channels
-        self.check_button_list = []
+        #Add checks box to selecte witch coincidence channels are ploted
+        self.second_button_list = []
         box = QGroupBox("Second Channel")
-        box_layout = QVBoxLayout()
-        for channel in range(4):
-            check = QCheckBox(f"ch {channel+1}")
-            if channel == 1 or channel==2: check.setChecked(True)
+        box_layout = QGridLayout()
+        line = 0
+        collum = 0
+        for channel in coincidence_list:
+            check = QCheckBox(f"ch {channel[0]}/{channel[1]}")
+            # if channel == 0 or channel==2: check.setChecked(True)
+            if line ==0:
+                check.setChecked(True)
             check.stateChanged.connect(self._show_graph)
-            self.check_button_list += [check]
-            box_layout.addWidget(check)
+            self.second_button_list += [check]
+            box_layout.addWidget(check,line,collum)
+            collum +=1
+            if collum >2:
+                collum =0
+                line+=1
+
+
         box.setLayout(box_layout)
         v_right_layout.addWidget(box)
 
@@ -122,6 +133,7 @@ class MainWindow(QMainWindow):
         main_r_box = QGroupBox()
         main_r_box.setLayout(v_right_layout)
 
+
         second_r_box = QGroupBox()
         second_r_box_layout = QFormLayout()
         self.selector_2 = QComboBox()
@@ -143,24 +155,30 @@ class MainWindow(QMainWindow):
             second_r_box_layout.addRow(f"Ch{i+1}",label)
         second_r_box.setLayout(second_r_box_layout)
 
+
+        # Set up the stack layout to change pages
         self.stack_layout = QStackedLayout()
         self.stack_layout.addWidget(main_r_box)
         self.stack_layout.addWidget(second_r_box)
+
         main_v_layout = QVBoxLayout()
         self.pageComboBox = QComboBox()
         self.pageComboBox.addItem("Page 1")
         self.pageComboBox.addItem("Page 2")
         self.pageComboBox.activated.connect(self.stack_layout.setCurrentIndex)
+
         main_v_layout.addWidget(self.pageComboBox)
         main_v_layout.addLayout(self.stack_layout)
 
-
+        # Graph layout
         self.v_left_layout  = QVBoxLayout()
+        self._show_graph()
         #Set up the main layout
         hlayout = QHBoxLayout()
-        self._show_graph()
         hlayout.addLayout(self.v_left_layout)
         hlayout.addLayout(main_v_layout)
+        hlayout.setStretch(0, 4)
+        hlayout.setStretch(1, 1)
         widget = QWidget()
         widget.setLayout(hlayout)
         self.setCentralWidget(widget)
@@ -244,12 +262,10 @@ class MainWindow(QMainWindow):
                 self.coincidence_list = []
 
                 self.update()
-                for i,m_channel in enumerate(self.main_button_list):
-                    if m_channel.isChecked():
-                        for j,s_channel in enumerate(self.check_button_list):
-                            if s_channel.isChecked():
-                                if j!=i:
-                                    self._update_graph_widget_histogram([i+1,j+1])
+
+                for j,s_channel in enumerate(self.second_button_list):
+                    if s_channel.isChecked():
+                        self._update_graph_widget_histogram(coincidence_list[j])
 
             case "Single and Coincidence":
                 self.selector_histo.setVisible(False)
@@ -260,19 +276,19 @@ class MainWindow(QMainWindow):
                 self._update_graph_widget_single()
                 self._update_graph_widget_coincidence()
 
-            case "Single and Histogram":
-                self.selector_histo.setVisible(True)
-                self.bin_params.setVisible(True)
-                self.save.setVisible(False)
-                self.coincidence_list = []
-                self.update()
-                self._update_graph_widget_single()
-                for i,m_channel in enumerate(self.main_button_list):
-                    if m_channel.isChecked():
-                        for j,s_channel in enumerate(self.check_button_list):
-                            if s_channel.isChecked():
-                                if j!=i:
-                                    self._update_graph_widget_histogram([i+1,j+1])
+            # case "Single and Histogram":
+            #     self.selector_histo.setVisible(True)
+            #     self.bin_params.setVisible(True)
+            #     self.save.setVisible(False)
+            #     self.coincidence_list = []
+            #     self.update()
+            #     self._update_graph_widget_single()
+            #     for i,m_channel in enumerate(self.main_button_list):
+            #         if m_channel.isChecked():
+            #             for j,s_channel in enumerate(self.second_button_list):
+            #                 if s_channel.isChecked():
+            #                     if j!=i:
+            #                         self._update_graph_widget_histogram([i+1,j+1])
 
             case _: assert 0, "Unreachable"
 
@@ -310,35 +326,35 @@ class MainWindow(QMainWindow):
         color_count = 0
         self.coincidence_list = []
         v_channel_list = []
-        channel_list =[]
-        for i,m_channel in enumerate(self.main_button_list):
-            if m_channel.isChecked():
-                for j,s_channel in enumerate(self.check_button_list):
-                    if s_channel.isChecked():
-                        if i != j and (j+1,i+1) not in channel_list : #select only if the channels are different, will need refactoring when we have two timetagger
-                            channel_list += [(i+1,j+1)]
-                            line_setup += [ GraphLineSetup(
-                                            label=f"ch.{i+1}/{j+1}",
-                                            symbol="s",
-                                            color=color_list[color_count])]
-                            color_count += 1
-                            if color_count > len(color_list)-1: color_count = 0
-                            coincidence_virtual_channel = self.builder.build_coincidence_virtual_channel(self.timetagger_proxy, [i+1,j+1])
-                            self.coincidence_list += [coincidence_virtual_channel]
-                            v_channel_list += [coincidence_virtual_channel.getChannels()[0]]
-                            label = QLabel()
-                            label.setFont(font)
-                            key = (coincidence_virtual_channel.getChannels()[0],MeasurementType.COINCIDENCES)
-                            self.last_val += [(label,f" ch.{i+1}/{j+1}",key)]
-                            self.box_layout_last.addWidget(label)
-        param = CountRateReqParams(v_channel_list,self.device_serial_number,self.timetagger_proxy,
-                                    MeasurementType.COINCIDENCES)
-        widget_info = WidgetInfo("Coincidence Count",line_setup,
-                        "Count/s",Color.WHITE_PRIMARY)
+        # channel_list =[]
 
-        graph_widget = RealTimeGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
-        self.widget_list += [graph_widget]
-        self.v_left_layout.addWidget(graph_widget)
+        for j,s_channel in enumerate(self.second_button_list):
+            if s_channel.isChecked():
+                # if i != j and (j+1,i+1) not in channel_list : #select only if the channels are different, will need refactoring when we have two timetagger
+                # channel_list += [(i+1,j+1)]
+                line_setup += [ GraphLineSetup(
+                                label=f"ch.{coincidence_list[j][0]}/{coincidence_list[j][1]}",
+                                symbol="s",
+                                color=color_list[color_count])]
+                color_count += 1
+                if color_count > len(color_list)-1: color_count = 0
+                coincidence_virtual_channel = self.builder.build_coincidence_virtual_channel(self.timetagger_proxy, coincidence_list[j])
+                self.coincidence_list += [coincidence_virtual_channel]
+                v_channel_list += [coincidence_virtual_channel.getChannels()[0]]
+                label = QLabel()
+                label.setFont(font)
+                key = (coincidence_virtual_channel.getChannels()[0],MeasurementType.COINCIDENCES)
+                self.last_val += [(label,f" ch.{coincidence_list[j][0]}/{coincidence_list[j][1]}",key)]
+                self.box_layout_last.addWidget(label)
+        if v_channel_list != []:
+            param = CountRateReqParams(v_channel_list,self.device_serial_number,self.timetagger_proxy,
+                                        MeasurementType.COINCIDENCES)
+            widget_info = WidgetInfo("Coincidence Count",line_setup,
+                            "Count/s",Color.WHITE_PRIMARY)
+
+            graph_widget = RealTimeGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
+            self.widget_list += [graph_widget]
+            self.v_left_layout.addWidget(graph_widget)
 
     #Update the graph to a histogram
     def _update_graph_widget_histogram(self,channels):
