@@ -98,7 +98,7 @@ class MainWindow(QMainWindow):
 
         #Add checks box to selecte witch coincidence channels are ploted
         self.second_button_list = []
-        box = QGroupBox("Second Channel")
+        box = QGroupBox("Coincidences Channels")
         box_layout = QGridLayout()
         line = 0
         collum = 0
