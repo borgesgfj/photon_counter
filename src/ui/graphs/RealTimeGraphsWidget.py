@@ -97,5 +97,5 @@ class MeasureGraphsWidget(QWidget):
     def _update_x_axis_value(self):
         previous_value = self.x_axis[-1] if self.x_axis else 0
         self.x_axis.append(previous_value + 1)
-        if len(self.x_axis) > 50:
-            self.x_axis.pop(0)
+        # if len(self.x_axis) > 50:
+        #     self.x_axis.pop(0)
