@@ -1,8 +1,8 @@
 from types import MethodType
-from PyQt5.QtWidgets import QMainWindow, QGridLayout, QComboBox, QCheckBox, QGroupBox, QLabel
+from PyQt5.QtWidgets import QDoubleSpinBox, QMainWindow, QGridLayout, QComboBox, QCheckBox, QGroupBox, QLabel, QDoubleSpinBox
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget,QLineEdit,QFormLayout,QStackedLayout
 from AppController import AppController
-from ui.graphs.RealTimeGraphsWidget import RealTimeGraphsWidget
+from ui.graphs.RealTimeGraphsWidget import MeasureGraphsWidget, RealTimeGraphsWidget
 from time_tagger.measurement.service import MeasurementService , CountRateReqParams
 from ui.styles import Color
 from ui.graphs.GraphWidget2D import WidgetInfo, GraphLineSetup
@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui
 
 
 color_list = [Color.BLUE_PRIMARY,Color.GREEN_PRIMARY,Color.RED_PRIMARY,Color.BLACK]
-histogram_type = {"Histogram": MeasurementType.HISTOGRAM,"Correlation":MeasurementType.HISTOGRAM_CORR}
+histogram_type = {"Correlation":MeasurementType.HISTOGRAM_CORR,"Histogram": MeasurementType.HISTOGRAM,}
 coincidence_list = [[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]]
 font = QtGui.QFont("Times", 24, QtGui.QFont.Bold)
 
@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
         v_right_layout = QVBoxLayout()
 
         #Add a drop down menu to select the type of plot
-        items = ["Single and Coincidence","Single count","Coincidence rate","Coincidence histogram",]
+        items = ["Coincidence histogram","Single and Coincidence","Single count","Coincidence rate","Measurement"]
         self.selector = QComboBox()
         self.selector.addItems(items)
         self.selector.activated.connect(self._show_graph)
@@ -81,10 +81,10 @@ class MainWindow(QMainWindow):
         box = QGroupBox("Main Channel")
         box_layout = QGridLayout()
         line = 0
-        collum =0
+        collum = 0
         for channel in range(4 ):
             check = QCheckBox(f"ch {channel+1}")
-            # if channel == 1 or channel == 2 : check.setChecked(True)
+            if channel == 1 or channel == 0 : check.setChecked(True)
             check.setChecked(True)
             check.stateChanged.connect(self._show_graph)
             self.main_button_list += [check]
@@ -105,7 +105,7 @@ class MainWindow(QMainWindow):
         for channel in coincidence_list:
             check = QCheckBox(f"ch {channel[0]}/{channel[1]}")
             # if channel == 0 or channel==2: check.setChecked(True)
-            if line ==0:
+            if line == 0 and 0 == collum:
                 check.setChecked(True)
             check.stateChanged.connect(self._show_graph)
             self.second_button_list += [check]
@@ -127,19 +127,31 @@ class MainWindow(QMainWindow):
         #Add save button
         self.save =QPushButton("Save")
         self.save.clicked.connect(self.save_data)
-        v_right_layout.addWidget(self.save)
+        # v_right_layout.addWidget(self.save)
+        # self.save.setVisible(False)
+        self.measure_time = QDoubleSpinBox()
+        self.measure_time.setRange(0.5,100)
+        self.measure_time.setSingleStep(0.5)
+        self.save_box =  QGroupBox("Save data")
+        layout =QFormLayout()
+        layout =QFormLayout()
+        layout.addRow("Measurement Time(s)",self.measure_time)
+        layout.addWidget(self.save)
+        self.save_box.setLayout(layout)
+        v_right_layout.addWidget(self.save_box)
+        self.save_box.setVisible(False)
 
         return v_right_layout
+
+
     #Initialize the main window
     def _init_interface(self):
-
-        v_right_layout = self._init_right_layout()
-
-        #Add a second page to the right layout to add a delay input
+        #main rigth layout cointain the page
         main_r_box = QGroupBox()
+        v_right_layout = self._init_right_layout()
         main_r_box.setLayout(v_right_layout)
 
-
+    #Add a second page to the right layout to add a delay input
         second_r_box = QGroupBox()
         second_r_box_layout = QFormLayout()
         self.selector_2 = QComboBox()
@@ -192,15 +204,17 @@ class MainWindow(QMainWindow):
     #Function that save the data
     def save_data(self):
         channel_list = []
+        time =self.measure_time.value()*1E12
         with open("save_data.txt","a") as f:
-            for i,m_channel in enumerate(self.main_button_list):
-                if m_channel.isChecked():
-                    channel_list += [i+1]
-            for channel in self.coincidence_list:
-                channel_list += [channel.getChannels()[0]]
-            counts = self.measurement_service.get_accumulated_count(channel_list,self.timetagger_proxy,30*10**12)
-            for value in counts:
-                f.write(f"{value},")
+            # for i,m_channel in enumerate(self.main_button_list):
+            #     if m_channel.isChecked():
+            #         channel_list += [i+1]
+            # for channel in self.coincidence_list:
+            #     channel_list += [channel.getChannels()[0]]
+            for widget in self.widget_list:
+                counts =widget.update_plot(time)
+                for value in counts:
+                    f.write(f"{value},")
             f.write("\n")
 
     #Init the timer for the label widget that displya the last value
@@ -243,41 +257,36 @@ class MainWindow(QMainWindow):
         for label  in self.last_val:
             self.box_layout_last.removeWidget(label[0])
         self.last_val = []
-
+        self.save_box.setVisible(False)
+        self.bin_params.setVisible(False)
+        self.selector_histo.setVisible(False)
         #Match case with the current text of the drop down menu
         match graph_type:
             case "Single count":
-                self.selector_histo.setVisible(False)
-                self.bin_params.setVisible(False)
-                self.save.setVisible(True)
                 self.coincidence_list = []
                 self.update()
                 self._update_graph_widget_single()
 
             case "Coincidence rate":
-                self.bin_params.setVisible(False)
-                self.selector_histo.setVisible(False)
-                self.save.setVisible(True)
                 self.update()
                 self._update_graph_widget_coincidence()
 
             case "Coincidence histogram":
                 self.selector_histo.setVisible(True)
                 self.bin_params.setVisible(True)
-                self.save.setVisible(False)
                 self.coincidence_list = []
-
                 self.update()
-
                 for j,s_channel in enumerate(self.second_button_list):
                     if s_channel.isChecked():
                         self._update_graph_widget_histogram(coincidence_list[j])
 
             case "Single and Coincidence":
-                self.selector_histo.setVisible(False)
-                self.bin_params.setVisible(False)
-                self.save.setVisible(True)
+                self.update()
+                self._update_graph_widget_single()
+                self._update_graph_widget_coincidence()
 
+            case "Measurement":
+                self.save_box.setVisible(True)
                 self.update()
                 self._update_graph_widget_single()
                 self._update_graph_widget_coincidence()
@@ -322,7 +331,11 @@ class MainWindow(QMainWindow):
         widget_info = WidgetInfo("Single Count",line_setup,
                         "Count/s",Color.WHITE_PRIMARY)
         #widget = (w, param)
-        graph_widget = RealTimeGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
+        graph_type = self.selector.currentText()
+        if graph_type == "Measurement":
+            graph_widget = MeasureGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
+        else:
+            graph_widget = RealTimeGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
         self.widget_list += [graph_widget]
         self.v_left_layout.addWidget(graph_widget)
 
@@ -357,8 +370,11 @@ class MainWindow(QMainWindow):
                                         MeasurementType.COINCIDENCES)
             widget_info = WidgetInfo("Coincidence Count",line_setup,
                             "Count/s",Color.WHITE_PRIMARY)
-
-            graph_widget = RealTimeGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
+            graph_type = self.selector.currentText()
+            if graph_type == "Measurement":
+                graph_widget = MeasureGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
+            else:
+                graph_widget = RealTimeGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
             self.widget_list += [graph_widget]
             self.v_left_layout.addWidget(graph_widget)
 
@@ -374,10 +390,10 @@ class MainWindow(QMainWindow):
         try :
             param.n_bin = int(self.n_bin_input.text())
             param.bin_width = int(self.bin_width_input.text())
-            print("N bins",param.n_bin)
-            print("Bins width",param.bin_width)
         except Exception as error:
             print(error)
+        self.n_bin_input.setText(f"{param.n_bin}")
+        self.bin_width_input.setText(f"{param.bin_width}")
         histo = self.builder.build_histogram_measurment(param)
         param.histogram_measurement = histo
         widget_info = WidgetInfo("Coincidence Count",line_setup,
