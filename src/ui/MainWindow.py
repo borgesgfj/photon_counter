@@ -228,7 +228,7 @@ class MainWindow(QMainWindow):
                 counts = widget.update_plot(time)
                 label1 =   self.last_val[i]
                 for value in counts:
-                    label1[0].setText(label[1]+f": {int(value)}")
+                    label1[0].setText(label1[1]+f": {int(value)}")
                     i+=1
                     f.write(f"{value},")
             f.write("\n")
