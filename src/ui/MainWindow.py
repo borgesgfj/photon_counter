@@ -42,8 +42,9 @@ class MainWindow(QMainWindow):
         self.measurement_service = measurement_service
         self.widget_list = []
         self.builder = TimeTaggerBuilder()
-        self._init_interface()
         self._init_last_timer()
+        self._init_interface()
+
 
     def _init_right_layout(self):
         v_right_layout = QVBoxLayout()
