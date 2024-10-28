@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
         v_right_layout = QVBoxLayout()
 
         #Add a drop down menu to select the type of plot
-        items = ["Coincidence histogram","Single and Coincidence","Single count","Coincidence rate","Measurement"]
+        items = ["Single and Coincidence","Single count","Coincidence rate","Measurement","Coincidence histogram",]
         self.selector = QComboBox()
         self.selector.addItems(items)
         self.selector.activated.connect(self._show_graph)
@@ -212,7 +212,7 @@ class MainWindow(QMainWindow):
             # for channel in self.coincidence_list:
             #     channel_list += [channel.getChannels()[0]]
             for widget in self.widget_list:
-                counts =widget.update_plot(time)
+                counts = widget.update_plot(time)
                 for value in counts:
                     f.write(f"{value},")
             f.write("\n")
@@ -251,7 +251,7 @@ class MainWindow(QMainWindow):
             self.v_left_layout.removeWidget(widget)
             widget.timer.stop()
             widget.close()
-        self.wiget_list = []
+        self.widget_list = []
         self.measurement_service.measurements_data.clear()
 
         for label  in self.last_val:

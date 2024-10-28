@@ -81,17 +81,22 @@ class MeasureGraphsWidget(QWidget):
     def _init_graph(self):
         layout = QVBoxLayout(self)
         self.x_axis = []
+        self.y_data = []
+        for line in self.widget_info.lines:
+            self.y_data += [[]]
         self.widget = GraphWidget2D(self.widget_info)
         #self.widget = [self.widget_info[1],graph_widget,x_axis]#maybe not needed anymore because of the refactoring of the main windows
         layout.addWidget(self.widget)
         self.setLayout(layout)
 
-    def update_plots(self,time):
+    def update_plot(self,time):
         self._update_x_axis_value()
         channel_list = self.param.channels
         timetagger_proxy =self.param.time_tagger_network_proxy
         new_data = self.measurement_service.get_accumulated_count(channel_list,timetagger_proxy,time)
-        self.widget.update_lines_data(self.x_axis,new_data)
+        for i,value in enumerate(new_data):
+            self.y_data[i] += [value]
+        self.widget.update_lines_data(self.x_axis,self.y_data)
         return new_data
 
     def _update_x_axis_value(self):
