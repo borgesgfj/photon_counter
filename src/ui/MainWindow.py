@@ -257,7 +257,7 @@ class MainWindow(QMainWindow):
         #clear the current widget
         for widget in self.widget_list:
             self.v_left_layout.removeWidget(widget)
-            widget.timer.stop()
+            # widget.timer.stop()
             widget.close()
         self.widget_list = []
         self.measurement_service.measurements_data.clear()
