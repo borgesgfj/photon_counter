@@ -213,24 +213,31 @@ class MainWindow(QMainWindow):
     def save_data(self):
         channel_list = []
         time =self.measure_time.value()*1E12
+        label = self.last_val[0][0]
+        label.setText("Saving")
         with open("save_data.txt","a") as f:
             # for i,m_channel in enumerate(self.main_button_list):
             #     if m_channel.isChecked():
             #         channel_list += [i+1]
             # for channel in self.coincidence_list:
             #     channel_list += [channel.getChannels()[0]]
+            i = 1
             for widget in self.widget_list:
                 counts = widget.update_plot(time)
+                label1 =   self.last_val[i]
                 for value in counts:
+                    label1[0].setText(label[1]+f": {int(value)}")
+                    i+=1
                     f.write(f"{value},")
             f.write("\n")
+        label.setText("Saved")
 
     #Init the timer for the label widget that displya the last value
     def _init_last_timer(self):
         self.box_last_value.timer = QtCore.QTimer()
         self.box_last_value.timer.setInterval(GRAPH_ANIMATION_INTERVAL)
         self.box_last_value.timer.timeout.connect(self._update_last)
-        self.box_last_value.timer.start()
+
 
     #Function that update the display of the last value
     def _update_last(self):
@@ -265,6 +272,7 @@ class MainWindow(QMainWindow):
         for label  in self.last_val:
             self.box_layout_last.removeWidget(label[0])
         self.last_val = []
+        self.box_last_value.timer.start()
         self.save_box.setVisible(False)
         self.bin_params.setVisible(False)
         self.selector_histo.setVisible(False)
@@ -294,6 +302,11 @@ class MainWindow(QMainWindow):
                 self._update_graph_widget_coincidence()
 
             case Widget_Layout.MEASUREMENT.value:
+                self.box_last_value.timer.stop()
+                label = QLabel()
+                label.setFont(font)
+                self.last_val += [(label,"measurement")]
+                self.box_layout_last.addWidget(label)
                 self.save_box.setVisible(True)
                 self.update()
                 self._update_graph_widget_single()
