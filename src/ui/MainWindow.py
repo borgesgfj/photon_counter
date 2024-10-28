@@ -1,6 +1,8 @@
+from enum import Enum
 from types import MethodType
 from PyQt5.QtWidgets import QDoubleSpinBox, QMainWindow, QGridLayout, QComboBox, QCheckBox, QGroupBox, QLabel, QDoubleSpinBox
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget,QLineEdit,QFormLayout,QStackedLayout
+from pyqtgraph.widgets.HistogramLUTWidget import HistogramLUTItem
 from AppController import AppController
 from ui.graphs.RealTimeGraphsWidget import MeasureGraphsWidget, RealTimeGraphsWidget
 from time_tagger.measurement.service import MeasurementService , CountRateReqParams
@@ -17,6 +19,12 @@ histogram_type = {"Correlation":MeasurementType.HISTOGRAM_CORR,"Histogram": Meas
 coincidence_list = [[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]]
 font = QtGui.QFont("Times", 24, QtGui.QFont.Bold)
 
+class Widget_Layout(Enum):
+    SINGLE_COIN = "Single and Coincidence"
+    SINGLE_COUNT = "Single count"
+    COIN_COUNT = "Coincidence rate"
+    MEASUREMENT ="Measurement"
+    HISTOGRAM = "Coincidence histogram"
 class MainWindow(QMainWindow):
     def __init__(
         self,
@@ -41,7 +49,7 @@ class MainWindow(QMainWindow):
         v_right_layout = QVBoxLayout()
 
         #Add a drop down menu to select the type of plot
-        items = ["Single and Coincidence","Single count","Coincidence rate","Measurement","Coincidence histogram",]
+        items = [Widget_Layout.SINGLE_COIN.value,Widget_Layout.SINGLE_COUNT.value,Widget_Layout.COIN_COUNT.value,Widget_Layout.MEASUREMENT.value,Widget_Layout.HISTOGRAM.value,]
         self.selector = QComboBox()
         self.selector.addItems(items)
         self.selector.activated.connect(self._show_graph)
@@ -85,7 +93,7 @@ class MainWindow(QMainWindow):
         for channel in range(4 ):
             check = QCheckBox(f"ch {channel+1}")
             if channel == 1 or channel == 0 : check.setChecked(True)
-            check.setChecked(True)
+            # scheck.setChecked(True)
             check.stateChanged.connect(self._show_graph)
             self.main_button_list += [check]
             box_layout.addWidget(check,line,collum)
@@ -262,16 +270,16 @@ class MainWindow(QMainWindow):
         self.selector_histo.setVisible(False)
         #Match case with the current text of the drop down menu
         match graph_type:
-            case "Single count":
+            case Widget_Layout.SINGLE_COUNT.value:
                 self.coincidence_list = []
                 self.update()
                 self._update_graph_widget_single()
 
-            case "Coincidence rate":
+            case Widget_Layout.COIN_COUNT.value:
                 self.update()
                 self._update_graph_widget_coincidence()
 
-            case "Coincidence histogram":
+            case Widget_Layout.HISTOGRAM.value:
                 self.selector_histo.setVisible(True)
                 self.bin_params.setVisible(True)
                 self.coincidence_list = []
@@ -280,12 +288,12 @@ class MainWindow(QMainWindow):
                     if s_channel.isChecked():
                         self._update_graph_widget_histogram(coincidence_list[j])
 
-            case "Single and Coincidence":
+            case Widget_Layout.SINGLE_COIN.value:
                 self.update()
                 self._update_graph_widget_single()
                 self._update_graph_widget_coincidence()
 
-            case "Measurement":
+            case Widget_Layout.MEASUREMENT.value:
                 self.save_box.setVisible(True)
                 self.update()
                 self._update_graph_widget_single()
@@ -332,7 +340,7 @@ class MainWindow(QMainWindow):
                         "Count/s",Color.WHITE_PRIMARY)
         #widget = (w, param)
         graph_type = self.selector.currentText()
-        if graph_type == "Measurement":
+        if graph_type == Widget_Layout.MEASUREMENT.value:
             graph_widget = MeasureGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
         else:
             graph_widget = RealTimeGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
@@ -371,7 +379,7 @@ class MainWindow(QMainWindow):
             widget_info = WidgetInfo("Coincidence Count",line_setup,
                             "Count/s",Color.WHITE_PRIMARY)
             graph_type = self.selector.currentText()
-            if graph_type == "Measurement":
+            if graph_type == Widget_Layout.MEASUREMENT.value:
                 graph_widget = MeasureGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
             else:
                 graph_widget = RealTimeGraphsWidget(widget_info,param,measaurement_service= self.measurement_service)
