@@ -232,7 +232,7 @@ class MainWindow(QMainWindow):
                     i+=1
                     f.write(f"{value},")
             f.write("\n")
-        label.setText("Saved")
+            label.setText("Saved")
 
     #Init the timer for the label widget that displya the last value
     def _init_last_timer(self):
