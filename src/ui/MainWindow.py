@@ -42,8 +42,8 @@ class MainWindow(QMainWindow):
         self.measurement_service = measurement_service
         self.widget_list = []
         self.builder = TimeTaggerBuilder()
-        self._init_last_timer()
         self._init_interface()
+
 
 
     def _init_right_layout(self):
@@ -84,6 +84,7 @@ class MainWindow(QMainWindow):
         self.last_val = []
         self.box_last_value.setLayout(self.box_layout_last)
         v_right_layout.addWidget(self.box_last_value)
+        self._init_last_timer()
 
         #Add a 4 check box to selecte witch channels are ploted
         self.main_button_list = []
