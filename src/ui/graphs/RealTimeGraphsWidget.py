@@ -19,10 +19,9 @@ class RealTimeGraphsWidget(QWidget):
 
         self.widget_info = info_widget
         self.measurement_service = measaurement_service
-        self.param = param
-        #self.widget = None
-        #self.x_axis = []
+        self.param: CountRateReqParams = param
         self.timer_delay = 1
+        self.x_axis = []
         self._init_graph()
         self._update_graph_event()
 
@@ -31,10 +30,7 @@ class RealTimeGraphsWidget(QWidget):
 
         if self.widget_info.is_histogram:
             self.timer_delay = 4
-        else :
-            self.x_axis = []
         self.widget = GraphWidget2D(self.widget_info)
-        #self.widget = [self.widget_info[1],graph_widget,x_axis]#maybe not needed anymore because of the refactoring of the main windows
         layout.addWidget(self.widget)
         self.setLayout(layout)
 
@@ -57,8 +53,8 @@ class RealTimeGraphsWidget(QWidget):
     def _update_x_axis_value(self,x_axis_values) -> list[float]:
         previous_value = x_axis_values[-1] if x_axis_values else 0
         x_axis_values.append(previous_value + 1)
-        if len(x_axis_values) > 50:
-            x_axis_values.pop(0)
+        # if len(x_axis_values) > 50:
+        #     x_axis_values.pop(0)
         return x_axis_values
 
 class MeasureGraphsWidget(QWidget):
@@ -73,8 +69,6 @@ class MeasureGraphsWidget(QWidget):
         self.widget_info = info_widget
         self.measurement_service = measaurement_service
         self.param = param
-        #self.widget = None
-        #self.x_axis = []
         self.timer_delay = 1
         self._init_graph()
 
@@ -91,9 +85,7 @@ class MeasureGraphsWidget(QWidget):
 
     def update_plot(self,time):
         self._update_x_axis_value()
-        channel_list = self.param.channels
-        timetagger_proxy =self.param.time_tagger_network_proxy
-        new_data = self.measurement_service.get_accumulated_count(channel_list,timetagger_proxy,time)
+        new_data = self.measurement_service.get_accumulated_count(self.param,time)
         for i,value in enumerate(new_data):
             self.y_data[i] += [value]
         self.widget.update_lines_data(self.x_axis,self.y_data)

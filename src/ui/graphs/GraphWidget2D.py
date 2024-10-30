@@ -74,7 +74,7 @@ class GraphWidget2D(pg.PlotWidget):
 
 
     def update_lines_data(
-        self, new_x_data: list[int], new_lines_y_data: list[list[float]]
+        self, new_x_data: list[float], new_lines_y_data: list[list[float]]
     ):
         for index, graph_line in enumerate(self._plotted_lines):
             new_y_data = new_lines_y_data[index]

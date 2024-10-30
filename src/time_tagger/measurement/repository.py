@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+import numpy as np
 
 class MeasurementType(Enum):
     SINGLE_COUNTS = "SINGLE_COUNTS"
@@ -15,6 +16,7 @@ class UpsertDataParams:
     measurement_type: MeasurementType
 
 
+
 class MeasurementRepository:
     def __init__(self) -> None:
         self.measurements_per_device: dict[tuple[int, MeasurementType]] = {}
@@ -27,8 +29,8 @@ class MeasurementRepository:
                 self.measurements_per_device[key] = []
             recorded_data = self.measurements_per_device[key]
             recorded_data.append(value)
-            if len(recorded_data) > 50:
-                recorded_data.pop(0)
+            # if len(recorded_data) > 50:
+            #     recorded_data.pop(0)
             r += [recorded_data]
         return r
 
@@ -40,12 +42,12 @@ class MeasurementRepository:
 
     def get_last_value(self,key):
         if key in self.measurements_per_device.keys():
-            return self.measurements_per_device[key][-1]
+            if key[1]==MeasurementType.HISTOGRAM or key[1] ==MeasurementType.HISTOGRAM_CORR:
+                data = self.measurements_per_device[key][-1]
+                return  (np.max(data[1]),data[0][np.argmax(data[1])])
+            else:
+                return self.measurements_per_device[key][-1]
 
-    def save_data(self):
-        f= open("save.csv","a")
-        print("saving")
-        for value in self.measurements_per_device.values():
-            f.write(f"{value[-1]},")
-        f.write("\n")
-        f.close()
+    def get_datas(self,key):
+        if key in self.measurements_per_device.keys():
+            return  self.measurements_per_device[key][-1]

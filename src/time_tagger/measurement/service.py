@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import TimeTagger as TT
 from shared.constants.constants import INTEGRATION_TIME
+import time_tagger
 from time_tagger.measurement.repository import (
     MeasurementRepository,
     UpsertDataParams,
@@ -12,7 +13,7 @@ import numpy as np
 class CountRateReqParams:
     channels: list[int]
     device_serial: str
-    time_tagger_network_proxy: object
+    time_tagger: object
     measurement_type: MeasurementType
     histogram_measurement= None
     bin_width = 50
@@ -30,7 +31,7 @@ class MeasurementService:
         channels = request_params.channels
 
         count_rate_data = self._get_count_rates(
-            channels, request_params.time_tagger_network_proxy
+            channels, request_params.time_tagger
         )
         return self.measurements_data.upsert_data(
             UpsertDataParams(
@@ -52,7 +53,10 @@ class MeasurementService:
             counts = cr.getData()
             return counts
 
-    def get_accumulated_count(self, channels,time_tagger,aquisition_time):
+    def get_accumulated_count(self, request_params,aquisition_time: CountRateReqParams):
+        device_serial = request_params.device_serial
+        time_tagger = request_params.time_tagger
+        channels = request_params.channels
         with TT.Countrate(
             tagger=time_tagger,
             channels=channels
@@ -60,7 +64,14 @@ class MeasurementService:
             cr.startFor(aquisition_time, clear=True)
             cr.waitUntilFinished()
             counts = cr.getCountsTotal()
-            return counts
+            return self.measurements_data.upsert_data(
+                UpsertDataParams(
+                    channels=channels,
+                    data=counts,
+                    device_serial=device_serial,
+                    measurement_type=request_params.measurement_type,
+                )
+            )
 
     #Get the measurement for the correlation histogram
     def getData_histo(self,request_params: CountRateReqParams):
@@ -72,7 +83,7 @@ class MeasurementService:
                 y = histo_measurement.getData()
                 histo_measurement.clear()
                 key = (request_params.histogram_measurement,request_params.measurement_type)
-                data=(max(y),x[np.argmax(y)])
+                data=(x,y)
                 self.measurements_data.save_data_histo(key,data)
                 return [x,y]
             case MeasurementType.HISTOGRAM:
@@ -80,7 +91,7 @@ class MeasurementService:
                 y = histo_measurement.getData()
                 histo_measurement.clear()
                 key = (request_params.histogram_measurement,request_params.measurement_type)
-                data=(max(y),x[np.argmax(y)])
+                data=(x,y)
                 self.measurements_data.save_data_histo(key,data)
                 return [x,y]
             case _: assert 0, "this" + histo_type.value + "correlation class doesn't exist"

@@ -44,8 +44,6 @@ class MainWindow(QMainWindow):
         self.builder = TimeTaggerBuilder()
         self._init_interface()
 
-
-
     def _init_right_layout(self):
         v_right_layout = QVBoxLayout()
 
@@ -153,7 +151,6 @@ class MainWindow(QMainWindow):
 
         return v_right_layout
 
-
     #Initialize the main window
     def _init_interface(self):
         #main rigth layout cointain the page
@@ -215,31 +212,25 @@ class MainWindow(QMainWindow):
     def save_data(self):
         channel_list = []
         time =self.measure_time.value()*1E12
-        label = self.last_val[0][0]
-        label.setText("Saving")
         with open("save_data.txt","a") as f:
-            # for i,m_channel in enumerate(self.main_button_list):
-            #     if m_channel.isChecked():
-            #         channel_list += [i+1]
-            # for channel in self.coincidence_list:
-            #     channel_list += [channel.getChannels()[0]]
-            i = 1
             for widget in self.widget_list:
-                counts = widget.update_plot(time)
-                label1 =   self.last_val[i]
-                for value in counts:
-                    label1[0].setText(label1[1]+f": {int(value)}")
-                    i+=1
-                    f.write(f"{value},")
+                if widget.widget_info.is_histogram:
+                    key = (widget.param.channels,widget.param.measurement_type)
+                    data = self.measurement_service.measurements_data.get_datas(key)
+                    f.write(f"{key}\n")
+                    f.write(f"{data}")
+                else:
+                    counts = widget.update_plot(time)
+                    self._update_last()
+                    for value in counts:
+                        f.write(f"{value},")
             f.write("\n")
-            label.setText("Saved")
 
     #Init the timer for the label widget that displya the last value
     def _init_last_timer(self):
         self.box_last_value.timer = QtCore.QTimer()
         self.box_last_value.timer.setInterval(GRAPH_ANIMATION_INTERVAL)
         self.box_last_value.timer.timeout.connect(self._update_last)
-
 
     #Function that update the display of the last value
     def _update_last(self):
@@ -250,7 +241,6 @@ class MainWindow(QMainWindow):
                     label[0].setText(label[1]+f": {value[0]},{value[1]}")
                 else:
                     label[0].setText(label[1]+f": {int(value)}")
-
 
     def _add_delay(self):
         channel = self.selector_2.currentIndex()+1
