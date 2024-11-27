@@ -1,0 +1,135 @@
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import QVBoxLayout, QWidget
+import pyqtgraph as pg
+import numpy as np
+from ui.styles import Color, axis_label_style, graph_line_style, graph_title_style
+from new_app.struct_and_enum import *
+import new_app.Newservice as service
+
+
+class RealTimeGraphsWidget(QWidget):
+    def __init__(
+        self,
+        info_widget,
+        param,
+        repo,
+        label_list,
+        has_timer
+    ):
+        super().__init__()
+
+        self.widget_info = info_widget
+        self.param: CountRateReqParams = param
+        self.label_list = label_list
+        self.x_axis = []
+        self.repo =repo
+        self._init_graph()
+        if has_timer:
+            self._init_timer()
+    def _init_graph(self):
+        layout = QVBoxLayout(self)
+        self.widget = pg.PlotWidget()
+        self.widget.setTitle(self.widget_info.title, **graph_title_style)
+        self.widget.setLabel("left", self.widget_info.vertical_axis_label, **axis_label_style)
+        self.widget.setBackground(self.widget_info.background_color.value)
+        self.widget.addLegend(offset=(10, 10))
+        self.widget.showGrid(x=True, y=True)
+        self.widget.setMouseEnabled(x=False, y=True)
+        self._plot_lines(self.widget_info.lines)
+        layout.addWidget(self.widget)
+        self.setLayout(layout)
+
+    def _plot_lines(self, lines: list[GraphLineSetup]):
+            self.widget._plotted_lines = [
+                self.widget.plot(
+                    [0],
+                    [0],
+                    name=line.label,
+                    pen=pg.mkPen(color=line.color.value, **graph_line_style),
+                    symbol=line.symbol,
+                    symbolSize=5,
+                    symbolBrush=line.color.value,
+                )
+                for line in lines
+            ]
+    def _init_timer(self):
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(Constant.GRAPH_ANIMATION_INTERVAL)
+        self.timer.timeout.connect(self._update_plots)
+        self.timer.start()
+
+    def _update_plots(self,time=Constant.INTEGRATION_TIME):
+         #maybe not needed anymore because of the refactoring of the main windows
+        self.x_axis = self._update_x_axis_value(self.x_axis)
+        new_data = service.record_measurement_data(self.param,self.repo,time)
+        for index, graph_line in enumerate(self.widget._plotted_lines):
+            new_y_data = new_data[index]
+            graph_line.setData(self.x_axis, new_y_data)
+            label = self.label_list[index]
+            label[0].setText(label[1]+f": {int(new_y_data[-1])}")
+
+    def _update_x_axis_value(self,x_axis_values) -> list[float]:
+        previous_value = x_axis_values[-1] if x_axis_values else 0
+        x_axis_values.append(previous_value + 1)
+        # if len(x_axis_values) > 50:
+        #     x_axis_values.pop(0)
+        return x_axis_values
+
+
+
+class RealTimeHistoWidget(QWidget):
+    def __init__(
+        self,
+        info_widget,
+        param,
+        repo,
+        label,
+    ):
+        super().__init__()
+
+        self.widget_info = info_widget
+        self.param: CountRateReqParams = param
+        self._init_graph()
+        self._init_timer()
+        self.label = label
+        self.repo = repo
+    def _init_timer(self):
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(Constant.GRAPH_ANIMATION_INTERVAL*4)
+        self.timer.timeout.connect(self._update_plots)
+        self.timer.start()
+
+    def _init_graph(self):
+        layout = QVBoxLayout(self)
+        self.widget = pg.PlotWidget()
+        self.widget.setTitle(self.widget_info.title, **graph_title_style)
+        self.widget.setLabel("left", self.widget_info.vertical_axis_label, **axis_label_style)
+        self.widget.setBackground(self.widget_info.background_color.value)
+        self.widget.addLegend(offset=(10, 10))
+        self.widget.showGrid(x=True, y=True)
+        self.widget.setMouseEnabled(x=False, y=True)
+        self._plot_lines(self.widget_info.lines)
+        layout.addWidget(self.widget)
+        self.setLayout(layout)
+
+    def _plot_lines(self, line: GraphLineSetup):
+            self.widget._plotted_lines = self.widget.plot(
+                    [0],
+                    [0],
+                    name=line.label,
+                    pen=pg.mkPen(color=line.color.value, width= 0.9),
+                    symbol=line.symbol,
+                    symbolSize=5,
+                    symbolBrush=line.color.value,
+                    fillLevel = 0,
+                    fillBrush=line.color.value,
+                    stepMode= "right",
+                )
+
+    def _update_plots(self):
+        data = service.getData_histo(self.param,self.repo)
+        y_data = data[1]
+        x_axis = data[0]
+        label =self.label
+        label[0].setText(label[1]+f": Max: {np.max(y_data)},time: {x_axis[np.argmax(y_data)]}")
+        self.widget._plotted_lines.setData(x_axis, y_data)
