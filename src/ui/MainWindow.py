@@ -3,7 +3,6 @@ from itertools import chain
 from types import MethodType
 from PyQt5.QtWidgets import QDoubleSpinBox, QMainWindow, QGridLayout, QComboBox, QCheckBox, QGroupBox, QLabel, QDoubleSpinBox
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget,QLineEdit,QFormLayout,QStackedLayout
-from pyqtgraph.widgets.HistogramLUTWidget import HistogramLUTItem
 from AppController import AppController
 from ui.graphs.RealTimeGraphsWidget import MeasureGraphsWidget, RealTimeGraphsWidget
 from time_tagger.measurement.service import MeasurementService , CountRateReqParams
@@ -91,17 +90,28 @@ class MainWindow(QMainWindow):
         box_layout = QGridLayout()
         line = 0
         collum = 0
-        for channel in range(4 ):
+        for channel in range(16):
             check = QCheckBox(f"ch {channel+1}")
             if channel == 1 or channel == 0 : check.setChecked(True)
             # scheck.setChecked(True)
-            check.stateChanged.connect(self._show_graph)
+            #check.stateChanged.connect(self._show_graph)
             self.main_button_list += [check]
             box_layout.addWidget(check,line,collum)
             collum +=1
-            if collum>1:
+            if collum>3:
                 line +=1
                 collum =0
+        button = QPushButton("Show Graph")
+        button.clicked.connect(self._show_graph)
+        box_layout.addWidget(button,line,collum)
+        collum +=1
+        # button = QPushButton("Check All")
+        # # button.clicked.connect(self._show_graph)
+        # box_layout.addWidget(button,line,collum)
+        # collum +=1
+        button = QPushButton("Clear all")
+        button.clicked.connect(self._clear_check_boxes)
+        box_layout.addWidget(button,line,collum)
         box.setLayout(box_layout)
         v_right_layout.addWidget(box)
 
@@ -113,15 +123,16 @@ class MainWindow(QMainWindow):
         collum = 0
         self.coincidence_channels = []
         self.first_channel = QComboBox()
-        self.first_channel.addItems([str(i) for i in range(1,5)])
+        numb_chan =16
+        self.first_channel.addItems([str(i) for i in range(1,numb_chan+1)])
         self.second_channel = QComboBox()
-        self.second_channel.addItems([str(i) for i in range(1,5)])
+        self.second_channel.addItems([str(i) for i in range(1,numb_chan+1)])
         box_layout.addWidget(self.first_channel,0,0)
         box_layout.addWidget(self.second_channel,0,1)
         add_button = QPushButton("Add")
         add_button.clicked.connect(self._add_coin)
         box_layout.addWidget(add_button,0,2)
-        button = QPushButton("refresh")
+        button = QPushButton("Show Graph")
         button.clicked.connect(self._show_graph)
         box_layout.addWidget(button,1,1)
         button = QPushButton("clear")
@@ -275,12 +286,11 @@ class MainWindow(QMainWindow):
     def _add_coin(self):
         i = int(self.first_channel.currentText())
         j = int(self.second_channel.currentText())
-        if i !=j and [i,j] not in self.coincidence_channels:
+        if i !=j and [i,j] not in self.coincidence_channels and [j,i] not in self.coincidence_channels:
             self.coincidence_channels += [[i,j]]
             label = QLabel()
             label.setText(f"{i}-{j}")
             self.small_box_layout.addWidget(label)
-
 
     def  _clear_small_box(self):
         self.coincidence_channels = []
@@ -288,7 +298,11 @@ class MainWindow(QMainWindow):
             widget = self.small_box_layout.itemAt(0).widget()
             self.small_box_layout.removeWidget(widget)
 
-    #Switch case called when there is an update with the channels checked or the graph type chossen
+    def _clear_check_boxes(self):
+        for box  in self.main_button_list:
+            box.setChecked(False)
+
+        #Switch case called when there is an update with the channels checked or the graph type chossen
     def _show_graph(self):
         graph_type = self.selector.currentText()
         #clear the current widget
@@ -322,9 +336,8 @@ class MainWindow(QMainWindow):
                 self.bin_params.setVisible(True)
                 self.coincidence_list = []
                 self.update()
-                for j,s_channel in enumerate(self.second_button_list):
-                    if s_channel.isChecked():
-                        self._update_graph_widget_histogram(coincidence_list[j])
+                for coin in self.coincidence_channels:
+                    self._update_graph_widget_histogram(coin)
 
             case Widget_Layout.SINGLE_COIN.value:
                 self.update()
@@ -385,7 +398,7 @@ class MainWindow(QMainWindow):
 
         # for j,s_channel in enumerate(self.second_button_list):
         #     if s_channel.isChecked():
-        print(self.coincidence_channels)
+
         for j in range(len(self.coincidence_channels)):
             line_setup += [ GraphLineSetup(
                             label=f"ch.{self.coincidence_channels[j][0]}/{self.coincidence_channels[j][1]}",
@@ -399,7 +412,7 @@ class MainWindow(QMainWindow):
             label = QLabel()
             label.setFont(font)
             key = (coincidence_virtual_channel.getChannels()[0],MeasurementType.COINCIDENCES)
-            self.last_val += [(label,f" ch.{self.coincidence_channels[j][0]}/{self.coincidence_channels[j][1]}",key)]
+            self.last_val += [(label,f" ch.{self.coincidence_channels[j][0]}-{self.coincidence_channels[j][1]}",key)]
             self.box_layout_last.addWidget(label)
         if v_channel_list != []:
             param = CountRateReqParams(v_channel_list,self.device_serial_number,self.timetagger_proxy,

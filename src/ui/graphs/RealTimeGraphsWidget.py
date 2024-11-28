@@ -13,7 +13,7 @@ class RealTimeGraphsWidget(QWidget):
         self,
         info_widget,
         param,
-        measaurement_service
+        measaurement_service,
     ):
         super().__init__()
 
