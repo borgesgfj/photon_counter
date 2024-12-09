@@ -16,7 +16,6 @@ from PyQt5 import QtCore, QtGui
 
 color_list = [Color.BLUE_PRIMARY,Color.GREEN_PRIMARY,Color.RED_PRIMARY,Color.BLACK]
 histogram_type = {"Correlation":MeasurementType.HISTOGRAM_CORR,"Histogram": MeasurementType.HISTOGRAM,}
-coincidence_list = [[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]]
 font = QtGui.QFont("Times", 24, QtGui.QFont.Bold)
 
 class Widget_Layout(Enum):
@@ -25,6 +24,7 @@ class Widget_Layout(Enum):
     COIN_COUNT = "Coincidence rate"
     MEASUREMENT ="Measurement"
     HISTOGRAM = "Coincidence histogram"
+
 class MainWindow(QMainWindow):
     def __init__(
         self,
@@ -156,7 +156,8 @@ class MainWindow(QMainWindow):
         box.setLayout(box_layout)
         v_right_layout.addWidget(box)
         small_box =  QGroupBox()
-        self.small_box_layout = QVBoxLayout()
+        small_box.setMaximumSize(200,100)
+        self.small_box_layout = QHBoxLayout()
         small_box.setLayout(self.small_box_layout)
         v_right_layout.addWidget(small_box)
 
@@ -242,7 +243,6 @@ class MainWindow(QMainWindow):
 
     #Function that save the data
     def save_data(self):
-        channel_list = []
         time =self.measure_time.value()*1E12
         with open("save_data.txt","a") as f:
             for widget in self.widget_list:
@@ -268,7 +268,7 @@ class MainWindow(QMainWindow):
     def _update_last(self):
         for label in self.last_val:
             value = self.measurement_service.measurements_data.get_last_value(label[2])
-            if value:
+            if value!=None:
                 if isinstance(value,tuple):
                     label[0].setText(label[1]+f": {value[0]},{value[1]}")
                 else:
@@ -289,7 +289,7 @@ class MainWindow(QMainWindow):
         if i !=j and [i,j] not in self.coincidence_channels and [j,i] not in self.coincidence_channels:
             self.coincidence_channels += [[i,j]]
             label = QLabel()
-            label.setText(f"{i}-{j}")
+            label.setText(f"{i}-{j},")
             self.small_box_layout.addWidget(label)
 
     def  _clear_small_box(self):

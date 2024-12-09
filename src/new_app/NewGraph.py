@@ -17,15 +17,16 @@ class RealTimeGraphsWidget(QWidget):
         has_timer
     ):
         super().__init__()
-
         self.widget_info = info_widget
         self.param: CountRateReqParams = param
         self.label_list = label_list
         self.x_axis = []
         self.repo =repo
         self._init_graph()
-        if has_timer:
+        self.has_timer = has_timer
+        if self.has_timer:
             self._init_timer()
+
     def _init_graph(self):
         layout = QVBoxLayout(self)
         self.widget = pg.PlotWidget()
@@ -61,7 +62,10 @@ class RealTimeGraphsWidget(QWidget):
     def _update_plots(self,time=Constant.INTEGRATION_TIME):
          #maybe not needed anymore because of the refactoring of the main windows
         self.x_axis = self._update_x_axis_value(self.x_axis)
-        new_data = service.record_measurement_data(self.param,self.repo,time)
+        if self.has_timer:
+            new_data = service.record_measurement_data(self.param,self.repo,time)
+        else :
+            new_data = service.get_accumulated_count(self.param,self.repo,time)
         for index, graph_line in enumerate(self.widget._plotted_lines):
             new_y_data = new_data[index]
             graph_line.setData(self.x_axis, new_y_data)
@@ -86,7 +90,6 @@ class RealTimeHistoWidget(QWidget):
         label,
     ):
         super().__init__()
-
         self.widget_info = info_widget
         self.param: CountRateReqParams = param
         self._init_graph()
@@ -113,18 +116,18 @@ class RealTimeHistoWidget(QWidget):
         self.setLayout(layout)
 
     def _plot_lines(self, line: GraphLineSetup):
-            self.widget._plotted_lines = self.widget.plot(
-                    [0],
-                    [0],
-                    name=line.label,
-                    pen=pg.mkPen(color=line.color.value, width= 0.9),
-                    symbol=line.symbol,
-                    symbolSize=5,
-                    symbolBrush=line.color.value,
-                    fillLevel = 0,
-                    fillBrush=line.color.value,
-                    stepMode= "right",
-                )
+        self.widget._plotted_lines = self.widget.plot(
+                [0],
+                [0],
+                name=line.label,
+                pen=pg.mkPen(color=line.color.value, width= 0.9),
+                symbol=line.symbol,
+                symbolSize=5,
+                symbolBrush=line.color.value,
+                fillLevel = 0,
+                fillBrush=line.color.value,
+                stepMode= "right",
+            )
 
     def _update_plots(self):
         data = service.getData_histo(self.param,self.repo)
