@@ -32,6 +32,7 @@ class MainWindow(QMainWindow):
         device_serial_number,
         app_controller: AppController,
         measurement_service: MeasurementService,
+        chan_number: int,
         *args,
         **kwargs
     ):
@@ -42,6 +43,7 @@ class MainWindow(QMainWindow):
         self.measurement_service = measurement_service
         self.widget_list = []
         self.builder = TimeTaggerBuilder()
+        self.chan_number= chan_number
         self._init_interface()
 
     def _init_right_layout(self):
@@ -90,7 +92,7 @@ class MainWindow(QMainWindow):
         box_layout = QGridLayout()
         line = 0
         collum = 0
-        for channel in range(16):
+        for channel in range(self.chan_number):
             check = QCheckBox(f"ch {channel+1}")
             if channel == 1 or channel == 0 : check.setChecked(True)
             # scheck.setChecked(True)
@@ -123,10 +125,9 @@ class MainWindow(QMainWindow):
         collum = 0
         self.coincidence_channels = []
         self.first_channel = QComboBox()
-        numb_chan =16
-        self.first_channel.addItems([str(i) for i in range(1,numb_chan+1)])
+        self.first_channel.addItems([str(i) for i in range(1,self.chan_number+1)])
         self.second_channel = QComboBox()
-        self.second_channel.addItems([str(i) for i in range(1,numb_chan+1)])
+        self.second_channel.addItems([str(i) for i in range(1,self.chan_number+1)])
         box_layout.addWidget(self.first_channel,0,0)
         box_layout.addWidget(self.second_channel,0,1)
         add_button = QPushButton("Add")
@@ -138,20 +139,6 @@ class MainWindow(QMainWindow):
         button = QPushButton("clear")
         button.clicked.connect(self._clear_small_box)
         box_layout.addWidget(button,1,2)
-        # for channel in range(1,16):
-        #     for j in range(channel+1,16):
-        #         self.coincidence_channels+=[(channel,j)]
-        #         check = QCheckBox(f"ch {channel}/{j}")
-        #         # if channel == 0 or channel==2: check.setChecked(True)
-        #         if line == 0 and 0 == collum:
-        #             check.setChecked(True)
-        #         check.stateChanged.connect(self._show_graph)
-        #         self.second_button_list += [check]
-        #         box_layout.addWidget(check,line,collum)
-        #         collum +=1
-        #         if collum > 4:
-        #             collum =0
-        #             line+=1
 
         box.setLayout(box_layout)
         v_right_layout.addWidget(box)
@@ -195,7 +182,7 @@ class MainWindow(QMainWindow):
         second_r_box = QGroupBox()
         second_r_box_layout = QFormLayout()
         self.selector_2 = QComboBox()
-        self.selector_2.addItems(['1','2','3','4'])
+        self.selector_2.addItems([str(i+1) for i in range(self.chan_number)])
         second_r_box_layout.addRow("Select Channel",self.selector_2)
         self.delay_input = QLineEdit()
         second_r_box_layout.addRow("Input delay",self.delay_input)
@@ -205,7 +192,7 @@ class MainWindow(QMainWindow):
         second_r_box_layout.addWidget(button)
 
         self.delay_list = []
-        for i in range(4):
+        for i in range(self.chan_number):
             label =QLabel()
             delay = self.timetagger_proxy.getInputDelay(i+1)
             label.setText(f"{delay}")
