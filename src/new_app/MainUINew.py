@@ -421,10 +421,11 @@ class MainWindow(QMainWindow):
         except Exception as error:
             min_histo = None
 
-        # if min_histo > max_histo  and min_histo != None and max_histo != None:
-        #     c = min_histo
-        #     min_histo = max_histo
-        #     max_histo = c
+        if min_histo != None and max_histo != None:
+            if min_histo > max_histo:
+                c = min_histo
+                min_histo = max_histo
+                max_histo = c
 
         self.n_bin_input.setText(f"{param.n_bin}")
         self.bin_width_input.setText(f"{param.bin_width}")
