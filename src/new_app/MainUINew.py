@@ -15,12 +15,14 @@ class MainWindow(QMainWindow):
         self,
         timetagger_proxy,
         device_serial_number,
+        chan_number,
         *args,
         **kwargs
     ):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.timetagger_proxy = timetagger_proxy
         self.device_serial_number = device_serial_number
+        self.chan_number = chan_number
         self.repo = MeasurementRepository()
         self.widget_list = []
         self.label_list = []
@@ -29,7 +31,6 @@ class MainWindow(QMainWindow):
 
     def _init_right_layout(self):
         v_right_layout = QVBoxLayout()
-        chan_number = 16
         #Add a drop down menu to select the type of plot
         items = [Widget_Layout.SINGLE_COIN.value,Widget_Layout.SINGLE_COUNT.value,Widget_Layout.COIN_COUNT.value,Widget_Layout.MEASUREMENT.value,Widget_Layout.HISTOGRAM.value,]
         self.selector = QComboBox()
@@ -71,7 +72,7 @@ class MainWindow(QMainWindow):
         box_layout = QGridLayout()
         line = 0
         collum = 0
-        for channel in range(chan_number):
+        for channel in range(self.chan_number):
             check = QCheckBox(f"ch {channel+1}")
             if channel == 1 or channel == 0 : check.setChecked(True)
             #check.stateChanged.connect(self._show_graph)
@@ -153,8 +154,7 @@ class MainWindow(QMainWindow):
         second_r_box = QGroupBox()
         second_r_box_layout = QFormLayout()
         self.selector_2 = QComboBox()
-        num_channels = 8
-        self.selector_2.addItems([str(i+1) for i in range(num_channels)])
+        self.selector_2.addItems([str(i+1) for i in range(self.chan_number)])
         second_r_box_layout.addRow("Select Channel",self.selector_2)
         self.delay_input = QLineEdit()
         second_r_box_layout.addRow("Input delay",self.delay_input)
@@ -164,7 +164,7 @@ class MainWindow(QMainWindow):
         second_r_box_layout.addWidget(button)
 
         self.delay_list = []
-        for i in range(num_channels):
+        for i in range(self.chan_number):
             label =QLabel()
             delay = self.timetagger_proxy.getInputDelay(i+1)
             label.setText(f"{delay}")
@@ -236,11 +236,14 @@ class MainWindow(QMainWindow):
                 i,j= text.split("-")
                 i = int(i)
                 j = int(j)
-                if i !=j and [i,j] not in self.coincidence_channels and [j,i] not in self.coincidence_channels:
-                    self.coincidence_channels += [[i,j]]
-                    label = QLabel()
-                    label.setText(f"{i}-{j},")
-                    self.small_box_layout.addWidget(label)
+                if i > self.chan_number or j > self.chan_number :
+                    pass
+                else :
+                    if i !=j and [i,j] not in self.coincidence_channels and [j,i] not in self.coincidence_channels:
+                        self.coincidence_channels += [[i,j]]
+                        label = QLabel()
+                        label.setText(f"{i}-{j},")
+                        self.small_box_layout.addWidget(label)
         except:
            pass
 
