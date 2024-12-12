@@ -29,46 +29,25 @@ class MainWindow(QMainWindow):
 
         self._init_interface()
 
-    def _init_right_layout(self):
-        v_right_layout = QVBoxLayout()
+    def _init_main_page(self):
+        page_layout = QVBoxLayout()
         #Add a drop down menu to select the type of plot
-        items = [Widget_Layout.SINGLE_COIN.value,Widget_Layout.SINGLE_COUNT.value,Widget_Layout.COIN_COUNT.value,Widget_Layout.MEASUREMENT.value,Widget_Layout.HISTOGRAM.value,]
+        items = [Widget_Layout.SINGLE_COIN.value,Widget_Layout.HISTOGRAM.value,Widget_Layout.COIN_COUNT.value,Widget_Layout.MEASUREMENT.value]
         self.selector = QComboBox()
         self.selector.addItems(items)
         self.selector.activated.connect(self._show_graph)
-        v_right_layout.addWidget(self.selector)
-
-        #Add a drop down menu to select the type of histogram, only visible when the plot type is histogram
-        self.selector_histo = QComboBox()
-        self.selector_histo.addItems(histogram_type.keys())
-        self.selector_histo.activated.connect(self._show_graph)
-        v_right_layout.addWidget(self.selector_histo)
-        self.selector_histo.setVisible(False)
-
-        #Add input to change the number of bin and the bin width, only visible when the plot type is histogram
-        self.bin_params =  QGroupBox("Bin params")
-        layout =QFormLayout()
-        self.n_bin_input = QLineEdit()
-        self.bin_width_input =QLineEdit()
-        layout.addRow("N bins", self.n_bin_input)
-        layout.addRow("Bins width", self.bin_width_input)
-        button = QPushButton("Update")
-        button.clicked.connect(self._show_graph)
-        layout.addWidget(button)
-        self.bin_params.setLayout(layout)
-        self.bin_params.setMaximumSize(200,100)
-        v_right_layout.addWidget(self.bin_params)
-        self.bin_params.setVisible(False)
 
         #Add a label widget that display the last value
         self.box_last_value = QGroupBox("Last value")
         self.box_layout_last = QGridLayout()
         self.box_last_value.setLayout(self.box_layout_last)
-        v_right_layout.addWidget(self.box_last_value)
+        page_layout.addWidget(self.box_last_value)
 
-        #Add a 4 check box to selecte witch channels are ploted
+        histo_page = self._init_histo_page()
+
+        #Add check boxes to selecte witch channels are ploted
         self.main_button_list = []
-        box = QGroupBox("Main Channel")
+        self.main_chan_box = QGroupBox("Main Channel")
         box_layout = QGridLayout()
         line = 0
         collum = 0
@@ -89,8 +68,14 @@ class MainWindow(QMainWindow):
         button = QPushButton("Clear all")
         button.clicked.connect(self._clear_check_boxes)
         box_layout.addWidget(button,line,collum)
-        box.setLayout(box_layout)
-        v_right_layout.addWidget(box)
+        self.main_chan_box.setLayout(box_layout)
+
+        main_box = QGroupBox()
+        self.first_stack_layout = QStackedLayout()
+        self.first_stack_layout.addWidget(self.main_chan_box)
+        self.first_stack_layout.addWidget(histo_page)
+        main_box.setLayout(self.first_stack_layout)
+        page_layout.addWidget(main_box)
 
         #Add checks box to selecte witch coincidence channels are ploted
         self.second_button_list = []
@@ -113,21 +98,21 @@ class MainWindow(QMainWindow):
         button.clicked.connect(self._clear_small_box)
         box_layout.addWidget(button,1,1)
         box.setLayout(box_layout)
-        v_right_layout.addWidget(box)
+        page_layout.addWidget(box)
         small_box =  QGroupBox()
         self.small_box_layout = QHBoxLayout()
         small_box.setLayout(self.small_box_layout)
-        v_right_layout.addWidget(small_box)
+        page_layout.addWidget(small_box)
 
         #Add refresh button
         refresh = QPushButton("Refresh")
         refresh.clicked.connect(self._show_graph)
-        v_right_layout.addWidget(refresh)
+        page_layout.addWidget(refresh)
 
         #Add save button
         self.save =QPushButton("Save")
         self.save.clicked.connect(self.save_data)
-        # v_right_layout.addWidget(self.save)
+        # page_layout.addWidget(self.save)
         # self.save.setVisible(False)
         self.measure_time = QDoubleSpinBox()
         self.measure_time.setRange(0.5,100)
@@ -138,30 +123,71 @@ class MainWindow(QMainWindow):
         layout.addRow("Measurement Time(s)",self.measure_time)
         layout.addWidget(self.save)
         self.save_box.setLayout(layout)
-        v_right_layout.addWidget(self.save_box)
+        page_layout.addWidget(self.save_box)
         self.save_box.setVisible(False)
 
-        return v_right_layout
+
+        main_page = QGroupBox()
+        main_page.setLayout(page_layout)
+        return main_page
+
+    def _init_histo_page(self):
+        page_layout = QVBoxLayout()
+
+        #Add a drop down menu to select the type of histogram, only visible when the plot type is histogram
+        self.selector_histo = QComboBox()
+        self.selector_histo.addItems(histogram_type.keys())
+        self.selector_histo.activated.connect(self._show_graph)
+        page_layout.addWidget(self.selector_histo)
+        # self.selector_histo.setVisible(False)
+
+        #Add input to change the number of bin and the bin width, only visible when the plot type is histogram
+        self.bin_params =  QGroupBox("Bin params")
+        layout =QFormLayout()
+        self.n_bin_input = QLineEdit()
+        self.bin_width_input =QLineEdit()
+        layout.addRow("N bins", self.n_bin_input)
+        layout.addRow("Bins width", self.bin_width_input)
+        button = QPushButton("Update")
+        button.clicked.connect(self._show_graph)
+        layout.addWidget(button)
+        self.bin_params.setLayout(layout)
+        self.bin_params.setMaximumSize(200,100)
+        page_layout.addWidget(self.bin_params)
+        # self.bin_params.setVisible(False)
+        page_layout.addWidget(self.box_last_value)
+
+        self.max_histo = QLineEdit()
+        self.min_histo = QLineEdit()
+        page_layout.addWidget(QLabel("Max"))
+        page_layout.addWidget(self.max_histo)
+        page_layout.addWidget(QLabel("Min"))
+        page_layout.addWidget(self.min_histo)
+
+
+        histo_page = QGroupBox()
+        histo_page.setLayout(page_layout)
+
+        return histo_page
 
     #Initialize the main window
     def _init_interface(self):
         #main rigth layout cointain the page
-        main_r_box = QGroupBox()
-        v_right_layout = self._init_right_layout()
-        main_r_box.setLayout(v_right_layout)
+
+        main_page = self._init_main_page()
 
         #Add a second page to the right layout to add a delay input
-        second_r_box = QGroupBox()
-        second_r_box_layout = QFormLayout()
+        delay_box = QGroupBox()
+        delay_box_layout = QFormLayout()
         self.selector_2 = QComboBox()
         self.selector_2.addItems([str(i+1) for i in range(self.chan_number)])
-        second_r_box_layout.addRow("Select Channel",self.selector_2)
+        delay_box_layout.addRow("Select Channel",self.selector_2)
         self.delay_input = QLineEdit()
-        second_r_box_layout.addRow("Input delay",self.delay_input)
+        delay_box_layout.addRow("Input delay",self.delay_input)
 
         button = QPushButton("Confirm")
         button.clicked.connect(self._add_delay)
-        second_r_box_layout.addWidget(button)
+        delay_box_layout.addWidget(button)
 
         self.delay_list = []
         for i in range(self.chan_number):
@@ -169,22 +195,25 @@ class MainWindow(QMainWindow):
             delay = self.timetagger_proxy.getInputDelay(i+1)
             label.setText(f"{delay}")
             self.delay_list += [label]
-            second_r_box_layout.addRow(f"Ch{i+1}",label)
-        second_r_box.setLayout(second_r_box_layout)
+            delay_box_layout.addRow(f"Ch{i+1}",label)
+        delay_box.setLayout(delay_box_layout)
+
 
 
         # Set up the stack layout to change pages
         self.stack_layout = QStackedLayout()
-        self.stack_layout.addWidget(main_r_box)
-        self.stack_layout.addWidget(second_r_box)
+        self.stack_layout.addWidget(main_page)
+        self.stack_layout.addWidget(delay_box)
 
         main_v_layout = QVBoxLayout()
         self.pageComboBox = QComboBox()
-        self.pageComboBox.addItem("Page 1")
-        self.pageComboBox.addItem("Page 2")
+        self.pageComboBox.addItem("Graph")
+        # self.pageComboBox.addItem("Histogram")
+        self.pageComboBox.addItem("Delay")
         self.pageComboBox.activated.connect(self.stack_layout.setCurrentIndex)
 
         main_v_layout.addWidget(self.pageComboBox)
+        main_v_layout.addWidget(self.selector)
         main_v_layout.addLayout(self.stack_layout)
 
         # Graph layout
@@ -202,7 +231,6 @@ class MainWindow(QMainWindow):
 
     #Function that save the data
     def save_data(self):
-        channel_list = []
         time =self.measure_time.value()*1E12
         with open("save_data.txt","a") as f:
             for widget in self.widget_list:
@@ -260,6 +288,7 @@ class MainWindow(QMainWindow):
     #Update the graph
     def _show_graph(self):
         graph_type = self.selector.currentText()
+        self.first_stack_layout.setCurrentIndex(0)
         #clear the current widget
         for widget in self.widget_list:
             self.v_left_layout.removeWidget(widget)
@@ -272,8 +301,8 @@ class MainWindow(QMainWindow):
             self.box_layout_last.removeWidget(label)
         self.label_list= []
         self.save_box.setVisible(False)
-        self.bin_params.setVisible(False)
-        self.selector_histo.setVisible(False)
+        # self.bin_params.setVisible(False)
+        # self.selector_histo.setVisible(False)
         #Match case with the current text of the drop down menu
         self.update()
         match graph_type:
@@ -285,8 +314,9 @@ class MainWindow(QMainWindow):
                 self._update_graph_widget_coincidence(True)
 
             case Widget_Layout.HISTOGRAM.value:
-                self.selector_histo.setVisible(True)
-                self.bin_params.setVisible(True)
+                # self.selector_histo.setVisible(True)
+                # self.bin_params.setVisible(True)
+                self.first_stack_layout.setCurrentIndex(1)
                 self.coincidence_list = []
                 for coin in self.coincidence_channels:
                     self._update_graph_widget_histogram(coin)
@@ -380,6 +410,22 @@ class MainWindow(QMainWindow):
             param.bin_width = int(self.bin_width_input.text())
         except Exception as error:
             print(error)
+
+        try :
+            max_histo = int(self.max_histo.text())
+        except Exception as error:
+            max_histo = None
+
+        try :
+            min_histo = int(self.min_histo.text())
+        except Exception as error:
+            min_histo = None
+
+        # if min_histo > max_histo  and min_histo != None and max_histo != None:
+        #     c = min_histo
+        #     min_histo = max_histo
+        #     max_histo = c
+
         self.n_bin_input.setText(f"{param.n_bin}")
         self.bin_width_input.setText(f"{param.bin_width}")
         histo = builder.build_histogram_measurment(param)
@@ -391,6 +437,6 @@ class MainWindow(QMainWindow):
         key = (histo,histo_type)
         self.box_layout_last.addWidget(label)
         self.label_list+=[label]
-        graph_widget = RealTimeHistoWidget(widget_info,param,self.repo,(label,f" ch.{channels[0]}-{channels[1]}",key))
+        graph_widget = RealTimeHistoWidget(widget_info,param,self.repo,(label,f" ch.{channels[0]}-{channels[1]}",key),min_histo,max_histo)
         self.widget_list += [graph_widget]
         self.v_left_layout.addWidget(graph_widget)

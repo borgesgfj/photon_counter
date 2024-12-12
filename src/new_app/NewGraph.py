@@ -88,6 +88,8 @@ class RealTimeHistoWidget(QWidget):
         param,
         repo,
         label,
+        min_histo,
+        max_histo,
     ):
         super().__init__()
         self.widget_info = info_widget
@@ -96,6 +98,9 @@ class RealTimeHistoWidget(QWidget):
         self._init_timer()
         self.label = label
         self.repo = repo
+        self.min_histo = min_histo
+        self.max_histo = max_histo
+
     def _init_timer(self):
         self.timer = QtCore.QTimer()
         self.timer.setInterval(Constant.GRAPH_ANIMATION_INTERVAL*4)
@@ -133,6 +138,16 @@ class RealTimeHistoWidget(QWidget):
         data = service.getData_histo(self.param,self.repo)
         y_data = data[1]
         x_axis = data[0]
+        if self.min_histo != None:
+            filter_min = x_axis>=self.min_histo
+            x_axis = x_axis[filter_min]
+            y_data = y_data[filter_min]
+
+        if self.max_histo != None:
+            filter_max = x_axis<=self.max_histo
+            x_axis = x_axis[filter_max]
+            y_data = y_data[filter_max]
+
         label =self.label
         label[0].setText(label[1]+f": Max: {np.max(y_data)},time: {x_axis[np.argmax(y_data)]}")
         self.widget._plotted_lines.setData(x_axis, y_data)

@@ -87,11 +87,12 @@ print(set_trigger_level_res, end="\n\n")
 
 serial = req.connected_devices[0].serial_number
 print(serial, "serial number of connceted TT", end="\n\n")
-
+chan_number =tagger.getChannelList()[-1]
 app = QtWidgets.QApplication(sys.argv)
 window = MainWindow(
     device_serial_number=serial,
     timetagger_proxy=tagger,
+    chan_number=chan_number,
 )
 
 window.show()
