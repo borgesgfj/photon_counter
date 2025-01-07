@@ -26,7 +26,6 @@ class MainWindow(QMainWindow):
         self.repo = MeasurementRepository()
         self.widget_list = []
         self.label_list = []
-
         self._init_interface()
 
     def _init_main_page(self):
@@ -77,7 +76,7 @@ class MainWindow(QMainWindow):
         main_box.setLayout(self.first_stack_layout)
         page_layout.addWidget(main_box)
 
-        #Add checks box to selecte witch coincidence channels are ploted
+        #Add input to selecte witch coincidence channels are ploted
         self.second_button_list = []
         self.coincidence_channels = []
         box = QGroupBox("Coincidences Channels")
@@ -255,6 +254,7 @@ class MainWindow(QMainWindow):
         except :
             pass
 
+    #Function that parse the input and add the channels to the coincidence channles list
     def _add_coin(self):
         try:
             text = self.first_channel.text()
@@ -405,6 +405,7 @@ class MainWindow(QMainWindow):
         histo_type = histogram_type[self.selector_histo.currentText()]
         param = CountRateReqParams(channels,self.device_serial_number,
                                     self.timetagger_proxy,histo_type )
+        #parse the min and max maybe should be a separate function
         try :
             param.n_bin = int(self.n_bin_input.text())
             param.bin_width = int(self.bin_width_input.text())

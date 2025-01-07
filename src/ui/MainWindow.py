@@ -43,7 +43,7 @@ class MainWindow(QMainWindow):
         self.measurement_service = measurement_service
         self.widget_list = []
         self.builder = TimeTaggerBuilder()
-        self.chan_number= chan_number
+        self.chan_number= chan_number 
         self._init_interface()
 
     def _init_right_layout(self):
@@ -86,7 +86,7 @@ class MainWindow(QMainWindow):
         v_right_layout.addWidget(self.box_last_value)
         self._init_last_timer()
 
-        #Add a 4 check box to selecte witch channels are ploted
+        #Add a N (number of available channel in the time tagger) check box to selecte witch channels are ploted
         self.main_button_list = []
         box = QGroupBox("Main Channel")
         box_layout = QGridLayout()
@@ -117,7 +117,7 @@ class MainWindow(QMainWindow):
         box.setLayout(box_layout)
         v_right_layout.addWidget(box)
 
-        #Add checks box to selecte witch coincidence channels are ploted
+        #Add an input to selecte the coincidence channels (format of input chi-chj) to selecte witch coincidence channels are ploted
         self.second_button_list = []
         self.coincidence_channels = []
         box = QGroupBox("Coincidences Channels")
@@ -154,7 +154,7 @@ class MainWindow(QMainWindow):
         refresh.clicked.connect(self._show_graph)
         v_right_layout.addWidget(refresh)
 
-        #Add save button
+        #Add save button only usable with the save option
         self.save =QPushButton("Save")
         self.save.clicked.connect(self.save_data)
         # v_right_layout.addWidget(self.save)

@@ -60,7 +60,6 @@ class RealTimeGraphsWidget(QWidget):
         self.timer.start()
 
     def _update_plots(self,time=Constant.INTEGRATION_TIME):
-         #maybe not needed anymore because of the refactoring of the main windows
         self.x_axis = self._update_x_axis_value(self.x_axis)
         if self.has_timer:
             new_data = service.record_measurement_data(self.param,self.repo,time)
