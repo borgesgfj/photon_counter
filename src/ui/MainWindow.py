@@ -122,25 +122,37 @@ class MainWindow(QMainWindow):
         self.coincidence_channels = []
         box = QGroupBox("Coincidences Channels")
         box_layout = QGridLayout()
-        self.first_channel = QLineEdit()
-        self.first_channel.setPlaceholderText("ch1-ch2,...")
-        box_layout.addWidget(self.first_channel,0,0)
+        # self.first_channel = QLineEdit()
+        # self.first_channel.setPlaceholderText("ch1-ch2,...")
+        # box_layout.addWidget(self.first_channel,0,0)
         add_button = QPushButton("Add")
         add_button.clicked.connect(self._add_coin)
-        box_layout.addWidget(add_button,0,1)
-        button = QPushButton("show graph")
-        button.clicked.connect(self._show_graph)
-        box_layout.addWidget(button,1,0)
-        button = QPushButton("clear")
-        button.clicked.connect(self._clear_small_box)
-        box_layout.addWidget(button,1,1)
-        box.setLayout(box_layout)
-        v_right_layout.addWidget(box)
-        small_box =  QGroupBox()
-        self.small_box_layout = QHBoxLayout()
-        small_box.setLayout(self.small_box_layout)
-        v_right_layout.addWidget(small_box)
-
+        box_layout.addWidget(add_button,2,0)
+        # button = QPushButton("show graph")
+        # button.clicked.connect(self._show_graph)
+        # box_layout.addWidget(button,1,0)
+        # button = QPushButton("clear")
+        # button.clicked.connect(self._clear_small_box)
+        # box_layout.addWidget(button,1,1)
+        # box.setLayout(box_layout)
+        # v_right_layout.addWidget(box)
+        # small_box =  QGroupBox()
+        # self.small_box_layout = QHBoxLayout()
+        # small_box.setLayout(self.small_box_layout)
+        # v_right_layout.addWidget(small_box)
+        a_b = QCheckBox("A-B")
+        a_c = QCheckBox("A-C")
+        a_d = QCheckBox("A-D")
+        b_c = QCheckBox("B-C")
+        b_d = QCheckBox("B-D")
+        c_d = QCheckBox("C-D")
+        self.abcd_list =[a_b,a_c,a_d,b_c,b_d,c_d]
+        box_layout.addWidget(a_b,0,0)   
+        box_layout.addWidget(a_c,0,1)   
+        box_layout.addWidget(a_d,0,2)   
+        box_layout.addWidget(b_c,1,0)   
+        box_layout.addWidget(b_d,1,1)   
+        box_layout.addWidget(c_d,1,2)   
         box.setLayout(box_layout)
         v_right_layout.addWidget(box)
         small_box =  QGroupBox()
@@ -272,24 +284,56 @@ class MainWindow(QMainWindow):
             pass
 
     def _add_coin(self):
-        try:
-            text = self.first_channel.text()
-            # j = int(self.second_channel.currentText())
-            slip1 = text.split(",")
-            for text  in slip1:
-                i,j= text.split("-")
-                i = int(i)
-                j = int(j)
-                if i > self.chan_number or j > self.chan_number :
-                    pass
-                else :
-                    if i !=j and [i,j] not in self.coincidence_channels and [j,i] not in self.coincidence_channels:
-                        self.coincidence_channels += [[i,j]]
-                        label = QLabel()
-                        label.setText(f"{i}-{j},")
-                        self.small_box_layout.addWidget(label)
-        except:
-           pass
+        for i,button in enumerate(self.abcd_list):
+            if button.isChecked():
+                if i == 0 : 
+                    self.coincidence_channels += [[1,5],[2,6],[3,7],[4,8],[1,6],[3,8]]
+                    label = QLabel()
+                    label.setText(f"A-B")
+                    self.small_box_layout.addWidget(label)
+                if i == 1 : 
+                    self.coincidence_channels += [[1,9],[2,10],[3,11],[4,12],[1,10],[3,12]]
+                    label = QLabel()
+                    label.setText(f"A-C")
+                    self.small_box_layout.addWidget(label)
+                if i == 2 : 
+                    self.coincidence_channels += [[1,13],[2,14],[3,15],[4,16],[1,14],[3,16]]
+                    label = QLabel()
+                    label.setText(f"A-D")
+                    self.small_box_layout.addWidget(label)
+                if i == 3 : 
+                    self.coincidence_channels += [[5,9],[6,10],[7,11],[8,12],[5,10],[7,12]]
+                    label = QLabel()
+                    label.setText(f"B-C")
+                    self.small_box_layout.addWidget(label)
+                if i == 4 : 
+                    self.coincidence_channels += [[5,13],[6,14],[7,15],[8,16],[5,14],[7,16]]
+                    label = QLabel()
+                    label.setText(f"B-D")
+                    self.small_box_layout.addWidget(label)
+                if i == 5 : 
+                    self.coincidence_channels += [[9,13],[10,14],[11,15],[12,16],[9,14],[11,16]]
+                    label = QLabel()
+                    label.setText(f"C-D")
+                    self.small_box_layout.addWidget(label)
+        # try:
+        #     text = self.first_channel.text()
+        #     # j = int(self.second_channel.currentText())
+        #     slip1 = text.split(",")
+        #     for text  in slip1:
+        #         i,j= text.split("-")
+        #         i = int(i)
+        #         j = int(j)
+        #         if i > self.chan_number or j > self.chan_number :
+        #             pass
+        #         else :
+        #             if i !=j and [i,j] not in self.coincidence_channels and [j,i] not in self.coincidence_channels:
+        #                 self.coincidence_channels += [[i,j]]
+        #                 label = QLabel()
+        #                 label.setText(f"{i}-{j},")
+        #                 self.small_box_layout.addWidget(label)  
+        # except:
+        #    pass
 
     def  _clear_small_box(self):
         self.coincidence_channels = []
@@ -303,6 +347,7 @@ class MainWindow(QMainWindow):
 
         #Switch case called when there is an update with the channels checked or the graph type chossen
     def _show_graph(self):
+        print(self.coincidence_channels)
         graph_type = self.selector.currentText()
         #clear the current widget
         for widget in self.widget_list:
