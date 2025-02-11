@@ -86,10 +86,8 @@ class MeasureGraphsWidget(QWidget):
     def update_plot(self,time):
         self._update_x_axis_value()
         new_data = self.measurement_service.get_accumulated_count(self.param,time)
-        for i,value in enumerate(new_data):
-            self.y_data[i] += [value]
-        self.widget.update_lines_data(self.x_axis,self.y_data)
-        return new_data
+        self.widget.update_lines_data(self.x_axis,new_data)
+        return new_data[:,-1]
 
     def _update_x_axis_value(self):
         previous_value = self.x_axis[-1] if self.x_axis else 0

@@ -16,7 +16,7 @@ from PyQt5 import QtCore, QtGui
 
 color_list = [Color.BLUE_PRIMARY,Color.GREEN_PRIMARY,Color.RED_PRIMARY,Color.BLACK]
 histogram_type = {"Correlation":MeasurementType.HISTOGRAM_CORR,"Histogram": MeasurementType.HISTOGRAM,}
-font = QtGui.QFont("Times", 24, QtGui.QFont.Bold)
+font = QtGui.QFont("Times",20, QtGui.QFont.Bold)
 
 class Widget_Layout(Enum):
     SINGLE_COIN = "Single and Coincidence"
@@ -122,12 +122,12 @@ class MainWindow(QMainWindow):
         self.coincidence_channels = []
         box = QGroupBox("Coincidences Channels")
         box_layout = QGridLayout()
-        # self.first_channel = QLineEdit()
-        # self.first_channel.setPlaceholderText("ch1-ch2,...")
-        # box_layout.addWidget(self.first_channel,0,0)
+        self.first_channel = QLineEdit()
+        self.first_channel.setPlaceholderText("ch1-ch2,...")
+        box_layout.addWidget(self.first_channel,0,0)
         add_button = QPushButton("Add")
         add_button.clicked.connect(self._add_coin)
-        box_layout.addWidget(add_button,2,0)
+        box_layout.addWidget(add_button,3,0)
         # button = QPushButton("show graph")
         # button.clicked.connect(self._show_graph)
         # box_layout.addWidget(button,1,0)
@@ -140,26 +140,27 @@ class MainWindow(QMainWindow):
         # self.small_box_layout = QHBoxLayout()
         # small_box.setLayout(self.small_box_layout)
         # v_right_layout.addWidget(small_box)
-        a_b = QCheckBox("A-B")
-        a_c = QCheckBox("A-C")
-        a_d = QCheckBox("A-D")
-        b_c = QCheckBox("B-C")
-        b_d = QCheckBox("B-D")
-        c_d = QCheckBox("C-D")
-        self.abcd_list =[a_b,a_c,a_d,b_c,b_d,c_d]
-        box_layout.addWidget(a_b,0,0)   
-        box_layout.addWidget(a_c,0,1)   
-        box_layout.addWidget(a_d,0,2)   
-        box_layout.addWidget(b_c,1,0)   
-        box_layout.addWidget(b_d,1,1)   
-        box_layout.addWidget(c_d,1,2)   
-        box.setLayout(box_layout)
-        v_right_layout.addWidget(box)
+        if self.chan_number > 8:
+            a_b = QCheckBox("A-B")
+            a_c = QCheckBox("A-C")
+            a_d = QCheckBox("A-D")
+            b_c = QCheckBox("B-C")
+            b_d = QCheckBox("B-D")
+            c_d = QCheckBox("C-D")
+            self.abcd_list =[a_b,a_c,a_d,b_c,b_d,c_d]
+            box_layout.addWidget(a_b,1,0)   
+            box_layout.addWidget(a_c,1,1)   
+            box_layout.addWidget(a_d,1,2)   
+            box_layout.addWidget(b_c,2,0)   
+            box_layout.addWidget(b_d,2,1)   
+            box_layout.addWidget(c_d,2,2) 
         small_box =  QGroupBox()
         small_box.setMaximumSize(200,100)
         self.small_box_layout = QHBoxLayout()
         small_box.setLayout(self.small_box_layout)
-        v_right_layout.addWidget(small_box)
+        box_layout.addWidget(small_box)  
+        box.setLayout(box_layout)
+        v_right_layout.addWidget(box)
 
         #Add refresh button
         refresh = QPushButton("Refresh")
@@ -316,24 +317,23 @@ class MainWindow(QMainWindow):
                     label = QLabel()
                     label.setText(f"C-D")
                     self.small_box_layout.addWidget(label)
-        # try:
-        #     text = self.first_channel.text()
-        #     # j = int(self.second_channel.currentText())
-        #     slip1 = text.split(",")
-        #     for text  in slip1:
-        #         i,j= text.split("-")
-        #         i = int(i)
-        #         j = int(j)
-        #         if i > self.chan_number or j > self.chan_number :
-        #             pass
-        #         else :
-        #             if i !=j and [i,j] not in self.coincidence_channels and [j,i] not in self.coincidence_channels:
-        #                 self.coincidence_channels += [[i,j]]
-        #                 label = QLabel()
-        #                 label.setText(f"{i}-{j},")
-        #                 self.small_box_layout.addWidget(label)  
-        # except:
-        #    pass
+        try:
+            text = self.first_channel.text()
+            slip1 = text.split(",")
+            for text  in slip1:
+                i,j= text.split("-")
+                i = int(i)
+                j = int(j)
+                if i > self.chan_number or j > self.chan_number :
+                    pass
+                else :
+                    if i !=j and [i,j] not in self.coincidence_channels and [j,i] not in self.coincidence_channels:
+                        self.coincidence_channels += [[i,j]]
+                        label = QLabel()
+                        label.setText(f"{i}-{j},")
+                        self.small_box_layout.addWidget(label)  
+        except:
+           pass
 
     def  _clear_small_box(self):
         self.coincidence_channels = []
