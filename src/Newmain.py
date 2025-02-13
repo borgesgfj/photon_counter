@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import sys
 from PyQt5 import QtWidgets
 from AppController import AppController, CloseConnectionPrams
@@ -17,12 +19,23 @@ from time_tagger.measurement.service import MeasurementService
 from time_tagger.builder import TimeTaggerBuilder
 from time_tagger.connection.dao import ConnectionDao
 from new_app.MainUINew import MainWindow
-
+import json 
 """
     This file is a mess because I am only using this for testing.
 """
 
-channels = [1, 2]
+arg = sys.argv
+
+if len(arg) < 2:
+    print("Error no file provided")
+    quit()
+
+f = open(arg[1],"r")
+data = json.load(f)
+
+# print(data["Trigger_lvl"])
+ 
+
 connection_data = ConnectionRepository()
 
 time_tagger_hardware_properties_service = TimeTaggerHardwarePropertiesDao()
@@ -35,7 +48,7 @@ time_tagger_network_connection_service = ConnectionService(
 
 time_tagger_builder = TimeTaggerBuilder()
 
-time_tagger_measurement_dao = MeasurementDao(time_tagger_builder)
+
 
 measurement_data = MeasurementRepository()
 
@@ -57,9 +70,9 @@ req = app_controller.connect_to_time_taggers_network(
         #     time_tagger_name="Alice_tagger",
         # )
         TimeTaggerAddressInfo(
-            host_address="192.168.1.164",
-            port="41101",
-            time_tagger_name="Alice_tagger",
+            host_address=data["addr"],
+            port=data["port"],
+            time_tagger_name=data["Name"],
         )
     ]
 )
@@ -71,15 +84,19 @@ print(req.connection_failed_devices, "connection failed devices", end="\n\n")
 tagger = req.connected_devices[0].tagger_proxy
 connected_device_name = req.connected_devices[0].time_tagger_name
 
+channels_voltage ={}
+for key,value in data["Trigger_v"].items():
+    channels_voltage[int(key)] = value
+
 set_trigger_level_res = app_controller.set_time_tagger_channels_trigger_level(
     SetTriggerLevelParams(
         time_tagger_network_proxy=tagger,
-        channels_voltage={
-            1: TRIGGER_VOLTAGE,
-            2: TRIGGER_VOLTAGE,
-            3: TRIGGER_VOLTAGE,
-            4: TRIGGER_VOLTAGE,
-        },
+        channels_voltage = channels_voltage #{
+        #     1: data["Trigger_lvl"]["1"],
+        #     2: TRIGGER_VOLTAGE,
+        #     3: TRIGGER_VOLTAGE,
+        #     4: TRIGGER_VOLTAGE,
+        # },
     )
 )
 
@@ -87,7 +104,7 @@ print(set_trigger_level_res, end="\n\n")
 
 serial = req.connected_devices[0].serial_number
 print(serial, "serial number of connceted TT", end="\n\n")
-chan_number =tagger.getChannelList()[-1]
+chan_number = data["Chan_Numb"] #tagger.getChannelList()[-1]
 app = QtWidgets.QApplication(sys.argv)
 window = MainWindow(
     device_serial_number=serial,

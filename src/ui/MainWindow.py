@@ -1,6 +1,7 @@
 from enum import Enum
 from itertools import chain
 from types import MethodType
+import numpy as np
 from PyQt5.QtWidgets import QDoubleSpinBox, QMainWindow, QGridLayout, QComboBox, QCheckBox, QGroupBox, QLabel, QDoubleSpinBox
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget,QLineEdit,QFormLayout,QStackedLayout
 from AppController import AppController
@@ -250,8 +251,7 @@ class MainWindow(QMainWindow):
                 if widget.widget_info.is_histogram:
                     key = (widget.param.channels,widget.param.measurement_type)
                     data = self.measurement_service.measurements_data.get_datas(key)
-                    f.write(f"{key}\n")
-                    f.write(f"{data}")
+                    np.save(f"save_histo-{key[0]}",data)
                 else:
                     counts = widget.update_plot(time)
                     self._update_last()
@@ -285,38 +285,39 @@ class MainWindow(QMainWindow):
             pass
 
     def _add_coin(self):
-        for i,button in enumerate(self.abcd_list):
-            if button.isChecked():
-                if i == 0 : 
-                    self.coincidence_channels += [[1,5],[2,6],[3,7],[4,8],[1,6],[3,8]]
-                    label = QLabel()
-                    label.setText(f"A-B")
-                    self.small_box_layout.addWidget(label)
-                if i == 1 : 
-                    self.coincidence_channels += [[1,9],[2,10],[3,11],[4,12],[1,10],[3,12]]
-                    label = QLabel()
-                    label.setText(f"A-C")
-                    self.small_box_layout.addWidget(label)
-                if i == 2 : 
-                    self.coincidence_channels += [[1,13],[2,14],[3,15],[4,16],[1,14],[3,16]]
-                    label = QLabel()
-                    label.setText(f"A-D")
-                    self.small_box_layout.addWidget(label)
-                if i == 3 : 
-                    self.coincidence_channels += [[5,9],[6,10],[7,11],[8,12],[5,10],[7,12]]
-                    label = QLabel()
-                    label.setText(f"B-C")
-                    self.small_box_layout.addWidget(label)
-                if i == 4 : 
-                    self.coincidence_channels += [[5,13],[6,14],[7,15],[8,16],[5,14],[7,16]]
-                    label = QLabel()
-                    label.setText(f"B-D")
-                    self.small_box_layout.addWidget(label)
-                if i == 5 : 
-                    self.coincidence_channels += [[9,13],[10,14],[11,15],[12,16],[9,14],[11,16]]
-                    label = QLabel()
-                    label.setText(f"C-D")
-                    self.small_box_layout.addWidget(label)
+        if self.chan_number>8:
+            for i,button in enumerate(self.abcd_list):
+                if button.isChecked():
+                    if i == 0 : 
+                        self.coincidence_channels += [[1,5],[2,6],[3,7],[4,8],[1,6],[3,8]]
+                        label = QLabel()
+                        label.setText(f"A-B")
+                        self.small_box_layout.addWidget(label)
+                    if i == 1 : 
+                        self.coincidence_channels += [[1,9],[2,10],[3,11],[4,12],[1,10],[3,12]]
+                        label = QLabel()
+                        label.setText(f"A-C")
+                        self.small_box_layout.addWidget(label)
+                    if i == 2 : 
+                        self.coincidence_channels += [[1,13],[2,14],[3,15],[4,16],[1,14],[3,16]]
+                        label = QLabel()
+                        label.setText(f"A-D")
+                        self.small_box_layout.addWidget(label)
+                    if i == 3 : 
+                        self.coincidence_channels += [[5,9],[6,10],[7,11],[8,12],[5,10],[7,12]]
+                        label = QLabel()
+                        label.setText(f"B-C")
+                        self.small_box_layout.addWidget(label)
+                    if i == 4 : 
+                        self.coincidence_channels += [[5,13],[6,14],[7,15],[8,16],[5,14],[7,16]]
+                        label = QLabel()
+                        label.setText(f"B-D")
+                        self.small_box_layout.addWidget(label)
+                    if i == 5 : 
+                        self.coincidence_channels += [[9,13],[10,14],[11,15],[12,16],[9,14],[11,16]]
+                        label = QLabel()
+                        label.setText(f"C-D")
+                        self.small_box_layout.addWidget(label)
         try:
             text = self.first_channel.text()
             slip1 = text.split(",")

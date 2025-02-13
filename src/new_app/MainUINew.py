@@ -5,6 +5,8 @@ from new_app.struct_and_enum import *
 import new_app.Newbuilder as builder
 from new_app.Newservice import MeasurementRepository
 from new_app.NewGraph import RealTimeHistoWidget, RealTimeGraphsWidget
+from numpy import save
+
 color_list = [Color.BLUE_PRIMARY,Color.GREEN_PRIMARY,Color.RED_PRIMARY,Color.BLACK]
 histogram_type = {"Correlation":MeasurementType.HISTOGRAM_CORR,"Histogram": MeasurementType.HISTOGRAM,}
 font = QtGui.QFont("Times", 24, QtGui.QFont.Bold)
@@ -67,9 +69,11 @@ class MainWindow(QMainWindow):
         button = QPushButton("Clear all")
         button.clicked.connect(self._clear_check_boxes)
         box_layout.addWidget(button,line,collum)
+        # self.main_chan_box.setMaximumSize(100,100)
         self.main_chan_box.setLayout(box_layout)
 
         main_box = QGroupBox()
+        main_box.setMaximumSize(300,300)
         self.first_stack_layout = QStackedLayout()
         self.first_stack_layout.addWidget(self.main_chan_box)
         self.first_stack_layout.addWidget(histo_page)
@@ -83,25 +87,37 @@ class MainWindow(QMainWindow):
         box_layout = QGridLayout()
         self.first_channel = QLineEdit()
         self.first_channel.setPlaceholderText("ch1-ch2,...")
-        # self.second_channel = QComboBox()
-        # self.second_channel.addItems([str(i) for i in range(1,chan_number+1)])
         box_layout.addWidget(self.first_channel,0,0)
-        # box_layout.addWidget(self.second_channel,0,1)
         add_button = QPushButton("Add")
         add_button.clicked.connect(self._add_coin)
         box_layout.addWidget(add_button,0,1)
-        button = QPushButton("show graph")
-        button.clicked.connect(self._show_graph)
-        box_layout.addWidget(button,1,0)
+        # button = QPushButton("show graph")
+        # button.clicked.connect(self._show_graph)
+        # box_layout.addWidget(button,1,0)
+        if self.chan_number > 8:
+            a_b = QCheckBox("A-B")
+            a_c = QCheckBox("A-C")
+            a_d = QCheckBox("A-D")
+            b_c = QCheckBox("B-C")
+            b_d = QCheckBox("B-D")
+            c_d = QCheckBox("C-D")
+            self.abcd_list =[a_b,a_c,a_d,b_c,b_d,c_d]
+            box_layout.addWidget(a_b,1,0)   
+            box_layout.addWidget(a_c,1,1)   
+            box_layout.addWidget(a_d,1,2)   
+            box_layout.addWidget(b_c,2,0)   
+            box_layout.addWidget(b_d,2,1)   
+            box_layout.addWidget(c_d,2,2) 
         button = QPushButton("clear")
         button.clicked.connect(self._clear_small_box)
-        box_layout.addWidget(button,1,1)
-        box.setLayout(box_layout)
-        page_layout.addWidget(box)
+        box_layout.addWidget(button,3,0)
         small_box =  QGroupBox()
         self.small_box_layout = QHBoxLayout()
         small_box.setLayout(self.small_box_layout)
-        page_layout.addWidget(small_box)
+        box_layout.addWidget(small_box)
+        box.setLayout(box_layout)
+        page_layout.addWidget(box)
+       
 
         #Add refresh button
         refresh = QPushButton("Refresh")
@@ -111,12 +127,11 @@ class MainWindow(QMainWindow):
         #Add save button
         self.save =QPushButton("Save")
         self.save.clicked.connect(self.save_data)
-        # page_layout.addWidget(self.save)
-        # self.save.setVisible(False)
         self.measure_time = QDoubleSpinBox()
         self.measure_time.setRange(0.5,100)
         self.measure_time.setSingleStep(0.5)
         self.save_box =  QGroupBox("Save data")
+        self.save_box.setMaximumSize(300,100)
         layout =QFormLayout()
         layout =QFormLayout()
         layout.addRow("Measurement Time(s)",self.measure_time)
@@ -138,31 +153,26 @@ class MainWindow(QMainWindow):
         self.selector_histo.addItems(histogram_type.keys())
         self.selector_histo.activated.connect(self._show_graph)
         page_layout.addWidget(self.selector_histo)
-        # self.selector_histo.setVisible(False)
 
         #Add input to change the number of bin and the bin width, only visible when the plot type is histogram
         self.bin_params =  QGroupBox("Bin params")
         layout =QFormLayout()
         self.n_bin_input = QLineEdit()
+        self.n_bin_input.setPlaceholderText("200")
         self.bin_width_input =QLineEdit()
+        self.bin_width_input.setPlaceholderText("50")
+        self.max_histo = QLineEdit()
+        self.min_histo = QLineEdit()
         layout.addRow("N bins", self.n_bin_input)
         layout.addRow("Bins width", self.bin_width_input)
+        layout.addRow("Max",self.max_histo)
+        layout.addRow("Min",self.min_histo)
         button = QPushButton("Update")
         button.clicked.connect(self._show_graph)
         layout.addWidget(button)
         self.bin_params.setLayout(layout)
-        self.bin_params.setMaximumSize(200,100)
         page_layout.addWidget(self.bin_params)
-        # self.bin_params.setVisible(False)
         page_layout.addWidget(self.box_last_value)
-
-        self.max_histo = QLineEdit()
-        self.min_histo = QLineEdit()
-        page_layout.addWidget(QLabel("Max"))
-        page_layout.addWidget(self.max_histo)
-        page_layout.addWidget(QLabel("Min"))
-        page_layout.addWidget(self.min_histo)
-
 
         histo_page = QGroupBox()
         histo_page.setLayout(page_layout)
@@ -236,8 +246,7 @@ class MainWindow(QMainWindow):
                 if widget.widget_info.is_histogram:
                     key = (widget.param.channels,widget.param.measurement_type)
                     data = self.repo.get_datas(key,True)
-                    f.write(f"{key}\n")
-                    f.write(f"{data}")
+                    save(f"histo-{key[0]}",data)
                 else:
                     counts = widget._update_plots(time)
                     for value in counts:
@@ -256,6 +265,39 @@ class MainWindow(QMainWindow):
 
     #Function that parse the input and add the channels to the coincidence channles list
     def _add_coin(self):
+        if self.chan_number >8:
+            for i,button in enumerate(self.abcd_list):
+                if button.isChecked():
+                    if i == 0 : 
+                        self.coincidence_channels += [[1,5],[2,6],[3,7],[4,8],[1,6],[3,8]]
+                        label = QLabel()
+                        label.setText(f"A-B")
+                        self.small_box_layout.addWidget(label)
+                    if i == 1 : 
+                        self.coincidence_channels += [[1,9],[2,10],[3,11],[4,12],[1,10],[3,12]]
+                        label = QLabel()
+                        label.setText(f"A-C")
+                        self.small_box_layout.addWidget(label)
+                    if i == 2 : 
+                        self.coincidence_channels += [[1,13],[2,14],[3,15],[4,16],[1,14],[3,16]]
+                        label = QLabel()
+                        label.setText(f"A-D")
+                        self.small_box_layout.addWidget(label)
+                    if i == 3 : 
+                        self.coincidence_channels += [[5,9],[6,10],[7,11],[8,12],[5,10],[7,12]]
+                        label = QLabel()
+                        label.setText(f"B-C")
+                        self.small_box_layout.addWidget(label)
+                    if i == 4 : 
+                        self.coincidence_channels += [[5,13],[6,14],[7,15],[8,16],[5,14],[7,16]]
+                        label = QLabel()
+                        label.setText(f"B-D")
+                        self.small_box_layout.addWidget(label)
+                    if i == 5 : 
+                        self.coincidence_channels += [[9,13],[10,14],[11,15],[12,16],[9,14],[11,16]]
+                        label = QLabel()
+                        label.setText(f"C-D")
+                        self.small_box_layout.addWidget(label)
         try:
             text = self.first_channel.text()
             # j = int(self.second_channel.currentText())
@@ -316,6 +358,7 @@ class MainWindow(QMainWindow):
             case Widget_Layout.HISTOGRAM.value:
                 # self.selector_histo.setVisible(True)
                 # self.bin_params.setVisible(True)
+                self.save_box.setVisible(True)
                 self.first_stack_layout.setCurrentIndex(1)
                 self.coincidence_list = []
                 for coin in self.coincidence_channels:
@@ -369,7 +412,6 @@ class MainWindow(QMainWindow):
         self.coincidence_list = []
         v_channel_list = []
         label_list = []
-
         for coin in self.coincidence_channels:
             line_setup += [ GraphLineSetup(
                             label=f"ch.{coin[0]}/{coin[1]}",
