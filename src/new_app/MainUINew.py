@@ -244,9 +244,9 @@ class MainWindow(QMainWindow):
         with open("save_data.txt","a") as f:
             for widget in self.widget_list:
                 if widget.widget_info.is_histogram:
-                    key = (widget.param.channels,widget.param.measurement_type)
+                    key = (widget.param.histogram_measurement,widget.param.measurement_type) 
                     data = self.repo.get_datas(key,True)
-                    save(f"histo-{key[0]}",data)
+                    save(f"histo-{widget.param.channels}",data)
                 else:
                     counts = widget._update_plots(time)
                     for value in counts:

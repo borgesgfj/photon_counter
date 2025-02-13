@@ -29,7 +29,7 @@ class MeasurementRepository:
     def get_datas(self,key,all:bool):
         if all:
             if key in self.measurements_per_device.keys():
-                return  self.measurements_per_device[key][-1]
+                return  self.measurements_per_device[tuple(key)][-1]
         else :
             if key in self.measurements_per_device.keys():
                 if key[1]==MeasurementType.HISTOGRAM or key[1] ==MeasurementType.HISTOGRAM_CORR:
