@@ -5,7 +5,7 @@ from new_app.struct_and_enum import *
 import new_app.Newbuilder as builder
 from new_app.Newservice import MeasurementRepository
 from new_app.NewGraph import RealTimeHistoWidget, RealTimeGraphsWidget
-from numpy import save
+from numpy import save, savetxt
 
 color_list = [Color.BLUE_PRIMARY,Color.GREEN_PRIMARY,Color.RED_PRIMARY,Color.BLACK]
 histogram_type = {"Correlation":MeasurementType.HISTOGRAM_CORR,"Histogram": MeasurementType.HISTOGRAM,}
@@ -246,7 +246,8 @@ class MainWindow(QMainWindow):
                 if widget.widget_info.is_histogram:
                     key = (widget.param.histogram_measurement,widget.param.measurement_type) 
                     data = self.repo.get_datas(key,True)
-                    save(f"histo-{widget.param.channels}",data)
+                    data = [[data[0][i],data[1][i]]for i in range(len(data[0]))]
+                    savetxt(f"histo-{widget.param.channels[0]}-{widget.param.channels[1]}",data,delimiter=",")
                 else:
                     counts = widget._update_plots(time)
                     for value in counts:
@@ -336,11 +337,14 @@ class MainWindow(QMainWindow):
             self.v_left_layout.removeWidget(widget)
             # widget.timer.stop()
             widget.close()
+            del widget
         self.widget_list = []
         self.repo.clear()
 
         for label  in self.label_list:
             self.box_layout_last.removeWidget(label)
+            label.close()
+            del label
         self.label_list= []
         self.save_box.setVisible(False)
         # self.bin_params.setVisible(False)
