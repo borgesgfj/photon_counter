@@ -72,6 +72,8 @@ def getData_histo(request_params: CountRateReqParams,repo:MeasurementRepository)
     histo_measurement =request_params.histogram_measurement
     match histo_type:
         case  MeasurementType.HISTOGRAM_CORR :
+            histo_measurement.startFor(2e12,clear=True)
+            histo_measurement.waitUntilFinished()
             x = histo_measurement.getIndex()
             y = histo_measurement.getData()
             histo_measurement.clear()
@@ -80,6 +82,8 @@ def getData_histo(request_params: CountRateReqParams,repo:MeasurementRepository)
             repo.save_data_histo(key,data)
             return [x,y]
         case MeasurementType.HISTOGRAM:
+            histo_measurement.startFor(2e12,clear=True)
+            histo_measurement.waitUntilFinished()
             x = histo_measurement.getIndex()
             y = histo_measurement.getData()
             histo_measurement.clear()
