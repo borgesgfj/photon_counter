@@ -56,7 +56,6 @@ class histo_thread(QObject):
     
     # @pyqtSlot()
     def getData_histo(self):
-        # histo_type = self.request_params.measurement_type
         histo_measurement =self.histo
         histo_measurement.startFor(2e12,clear=True)
         histo_measurement.waitUntilFinished()
@@ -65,7 +64,6 @@ class histo_thread(QObject):
         histo_measurement.clear()
         key = (self.request_params.histogram_measurement,self.request_params.measurement_type)
         datas=(x,y)
-        # repo.save_data_histo(key,data)
         self.data.emit(datas)
-        # return [x,y]
+        
           

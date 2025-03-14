@@ -180,8 +180,8 @@ class ThreadHistoWidget(QWidget):
         self.timer.start()
 
     def start_thread(self):
-        if not self.thread.isRunning():
-            self.thread.start()
+        # if not self.thread.isRunning():
+        self.thread.start()
 
     def init_thread(self):
         self.thread = QtCore.QThread()
@@ -236,4 +236,6 @@ class ThreadHistoWidget(QWidget):
         label =self.label
         label[0].setText(label[1]+f": Max: {np.max(y_data)},time: {x_axis[np.argmax(y_data)]}")
         self.widget._plotted_lines.setData(x_axis, y_data)
-        self.thread.terminate()
+        self.thread.exit()
+
+        self.thread.wait()
