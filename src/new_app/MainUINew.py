@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton,QLineEdit,QFor
 from new_app.struct_and_enum import *
 import new_app.Newbuilder as builder
 from new_app.Newservice import MeasurementRepository
-from new_app.NewGraph import RealTimeHistoWidget, RealTimeGraphsWidget
+from new_app.NewGraph import RealTimeHistoWidget, RealTimeGraphsWidget,ThreadHistoWidget
 from numpy import save, savetxt
 
 color_list = [Color.BLUE_PRIMARY,Color.GREEN_PRIMARY,Color.RED_PRIMARY,Color.BLACK]
@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
     def _init_main_page(self):
         page_layout = QVBoxLayout()
         #Add a drop down menu to select the type of plot
-        items = [Widget_Layout.SINGLE_COIN.value,Widget_Layout.HISTOGRAM.value,Widget_Layout.COIN_COUNT.value,Widget_Layout.MEASUREMENT.value]
+        items = [Widget_Layout.SINGLE_COIN.value,Widget_Layout.THREAD.value,Widget_Layout.HISTOGRAM.value,Widget_Layout.COIN_COUNT.value,Widget_Layout.MEASUREMENT.value]
         self.selector = QComboBox()
         self.selector.addItems(items)
         self.selector.activated.connect(self._show_graph)
@@ -334,6 +334,11 @@ class MainWindow(QMainWindow):
         self.first_stack_layout.setCurrentIndex(0)
         #clear the current widget
         for widget in self.widget_list:
+            try: 
+                widget.thread.terminate()
+                widget.thread.wait()
+            except:
+                pass
             self.v_left_layout.removeWidget(widget)
             # widget.timer.stop()
             widget.close()
@@ -377,7 +382,12 @@ class MainWindow(QMainWindow):
                 self.update()
                 self._update_graph_widget_single(False)
                 self._update_graph_widget_coincidence(False)
-
+            case Widget_Layout.THREAD.value:
+                self.save_box.setVisible(True)
+                self.first_stack_layout.setCurrentIndex(1)
+                self.coincidence_list = []
+                for coin in self.coincidence_channels:
+                    self._update_graph_thread(coin)
             case _: assert 0, "Unreachable"
 
     #Update the graph to the single count rate
@@ -486,5 +496,52 @@ class MainWindow(QMainWindow):
         self.box_layout_last.addWidget(label)
         self.label_list+=[label]
         graph_widget = RealTimeHistoWidget(widget_info,param,self.repo,(label,f" ch.{channels[0]}-{channels[1]}",key),min_histo,max_histo)
+        self.widget_list += [graph_widget]
+        self.v_left_layout.addWidget(graph_widget)
+
+
+    def _update_graph_thread(self,channels):
+        line_setup = GraphLineSetup(
+                        label=f"ch.{channels[0]}/{channels[1]}",
+                        symbol="s",
+                        color=Color.RED_PRIMARY)
+        histo_type = histogram_type[self.selector_histo.currentText()]
+        param = CountRateReqParams(channels,self.device_serial_number,
+                                    self.timetagger_proxy,histo_type )
+        #parse the min and max maybe should be a separate function
+        try :
+            param.n_bin = int(self.n_bin_input.text())
+            param.bin_width = int(self.bin_width_input.text())
+        except Exception as error:
+            print(error)
+
+        try :
+            max_histo = int(self.max_histo.text())
+        except Exception as error:
+            max_histo = None
+
+        try :
+            min_histo = int(self.min_histo.text())
+        except Exception as error:
+            min_histo = None
+
+        if min_histo != None and max_histo != None:
+            if min_histo > max_histo:
+                c = min_histo
+                min_histo = max_histo
+                max_histo = c
+
+        self.n_bin_input.setText(f"{param.n_bin}")
+        self.bin_width_input.setText(f"{param.bin_width}")
+        # histo = builder.build_histogram_measurment(param)
+        # param.histogram_measurement = 
+        widget_info = WidgetInfo("Coincidence Count",line_setup,
+                        "Count",Color.WHITE_PRIMARY,True)
+
+        label = QLabel()
+        # key = (histo,histo_type)
+        self.box_layout_last.addWidget(label)
+        self.label_list+=[label]
+        graph_widget = ThreadHistoWidget(widget_info,param,self.repo,(label,f" ch.{channels[0]}-{channels[1]}"),min_histo,max_histo)
         self.widget_list += [graph_widget]
         self.v_left_layout.addWidget(graph_widget)

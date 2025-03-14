@@ -9,6 +9,7 @@ class Widget_Layout(Enum):
     COIN_COUNT = "Coincidence rate"
     MEASUREMENT ="Measurement"
     HISTOGRAM = "Coincidence histogram"
+    THREAD = "Thread"
 
 class MeasurementType(Enum):
     SINGLE_COUNTS = "SINGLE_COUNTS"
