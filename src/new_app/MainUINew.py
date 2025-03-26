@@ -7,9 +7,12 @@
 
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import  QMainWindow
+from new_app.constants import Colot_List
+
 
 class MainWindow(QMainWindow):
     def __init__(
+        self,
         device_serial_number,
         timetagger_proxy,
         chan_number,
