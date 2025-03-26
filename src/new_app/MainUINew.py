@@ -10,6 +10,12 @@ from PyQt5.QtWidgets import  QMainWindow
 
 class MainWindow(QMainWindow):
     def __init__(
+        device_serial_number,
+        timetagger_proxy,
+        chan_number,
         *args,
         **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
+        self.device_serial_number = device_serial_number
+        self.timetagger_proxy= timetagger_proxy 
+        self.chan_number = chan_number
