@@ -1,13 +1,15 @@
 from dataclasses import dataclass
 from enum import Enum
-
+from PyQt5 import QtCore
 
 """
     File that hold the enums and constants need for the new app
 
 """
-
-
+INTEGRATION_TIME = 0.5e12  # IN PICOSECONDS
+TRIGGER_VOLTAGE = 0.12  # VALUE IN VOLTS
+SLEEP_TIME = 10e-12
+GRAPH_ANIMATION_INTERVAL = int(INTEGRATION_TIME * (1e-9))  # IN MILLISECONDS
 #-------- ENU----------
 class Widget_Layout(Enum):
     SINGLE_COIN = "Single and Coincidence"
@@ -30,6 +32,11 @@ class Color(Enum):
 
 Color_List = [Color.BLUE_PRIMARY,Color.GREEN_PRIMARY,Color.RED_PRIMARY,Color.BLACK]
 
+graph_line_style = {"width": 3, "style": QtCore.Qt.SolidLine}
+
+graph_title_style = {"color": Color.BLACK.value, "size": "15pt"}
+
+axis_label_style = {"font-size": "20pt", "color": Color.BLACK.value}
 
 
 

@@ -22,3 +22,5 @@ class MainWindow(QMainWindow):
         self.device_serial_number = device_serial_number
         self.timetagger_proxy= timetagger_proxy 
         self.chan_number = chan_number
+    
+    
