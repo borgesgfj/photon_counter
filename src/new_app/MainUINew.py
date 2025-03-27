@@ -7,11 +7,12 @@
 
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import  QMainWindow
-from new_app.constants import Color_List, Widget_Layout,MeasurementType
+from new_app.constants import Color_List, Widget_Layout,MeasurementType,CountRateReqParams,WidgetInfo,Color,GraphLineSetup
 from new_app.NewGraph import RealTimeGraphsWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QStackedLayout, QGridLayout,QFormLayout
 from PyQt5.QtWidgets import  QWidget, QComboBox, QGroupBox, QCheckBox,QPushButton, QLineEdit,QDoubleSpinBox,QLabel
-
+from new_app.NewService import MeasurementRepository
+font = QtGui.QFont("Times", 20, QtGui.QFont.Bold) #font for the last value labels
 
 class MainWindow(QMainWindow):
     def __init__(
@@ -26,6 +27,9 @@ class MainWindow(QMainWindow):
         self.timetagger_proxy= timetagger_proxy 
         self.chan_number = chan_number
         self.coincidence_channels = [] #Contait tuple of channel for coincidence ( EX : (1,3) ) 
+        self.widget_list = []
+        self.label_list = []
+        self.repo = MeasurementRepository()
         self._init_interface()
     
     
@@ -76,7 +80,7 @@ class MainWindow(QMainWindow):
         self.selector_histo.addItems([MeasurementType.HISTOGRAM.value,MeasurementType.HISTOGRAM_CORR.value])
         self.selector_histo.activated.connect(self._init_graphs_widget)
         first_page_layout.addWidget(self.selector_histo) 
-        self.selector_histo.setVisible(False)   
+         
 
 
         #Add a label widget that display the last value
@@ -226,4 +230,55 @@ class MainWindow(QMainWindow):
     def _init_graphs_widget(self):
         self.save_box.setVisible(False)
         self.histo_params.setVisible(False)
-        
+        self.selector_histo.setVisible(False) 
+        self.main_chan_box.setVisible(True)
+        graph_type = self.selector.currentText()
+        #clear the current widget
+        for widget in self.widget_list:
+            self.graph_layout.removeWidget(widget)
+            widget.close()
+            del widget
+        self.widget_list = []
+        self.repo.clear()
+
+        for label  in self.label_list:
+            self.box_layout_last.removeWidget(label)
+            label.close()
+            del label
+        self.label_list= []
+        self.update()
+        match graph_type:
+            case Widget_Layout.SINGLE_COIN.value:
+                self.single_count_graph(True)
+                self.coincidence_count_graph()
+
+    def single_count_graph(self,has_timer):
+        line_setup = []
+        channel_list = []
+        label_list = []
+        color_count = 0
+        for i,m_channel in enumerate(self.main_button_list):
+            if m_channel.isChecked():
+                line_setup += [ GraphLineSetup(
+                                label=f"ch.{i+1}",
+                                symbol="s",
+                                color=Color_List[color_count])]
+                channel_list +=[i+1]
+                color_count += 1
+                if color_count > len(Color_List)-1: color_count = 0
+                label = QLabel()
+                label.setFont(font)
+                key=(i+1,MeasurementType.SINGLE_COUNTS)
+                label_list += [(label,f"ch.{i+1}",key)]
+                self.box_layout_last.addWidget(label)
+                self.label_list+=[label]
+        param = CountRateReqParams(channel_list,self.device_serial_number,self.timetagger_proxy,MeasurementType.SINGLE_COUNTS)
+        widget_info = WidgetInfo("Single Count",line_setup,
+                        "Count/s",Color.WHITE_PRIMARY)
+        graph_widget = RealTimeGraphsWidget(widget_info,param,self.repo,label_list,has_timer)
+        self.widget_list += [graph_widget]
+        self.graph_layout.addWidget(graph_widget)
+
+
+    def coincidence_count_graph(self):
+        pass

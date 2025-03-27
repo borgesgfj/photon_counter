@@ -31,7 +31,7 @@ class RealTimeGraphsWidget(QWidget):
             self.param: CountRateReqParams = param
             self.label_list = label_list
             self.x_axis = []
-            self.y_axis = [[]]*len(self.widget_info.lines)
+            self.y_axis = []
             self.repo =repo
             self._init_graph()
             self.has_timer = has_timer # bool to activate the timer or not, if false is provided the graph will not refresh automaticly
@@ -79,7 +79,10 @@ class RealTimeGraphsWidget(QWidget):
         else :
             new_data = get_accumulated_count(self.param,self.repo,time)
         for index, graph_line in enumerate(self.widget._plotted_lines):
-            self.y_axis[index] += new_data[index]
+            if len(self.y_axis) <= index :
+                self.y_axis += [[new_data[index]]]
+            else :
+                self.y_axis[index] += [new_data[index]]
             graph_line.setData(self.x_axis, self.y_axis[index])
             label = self.label_list[index]
             label[0].setText(label[1]+f": {int(new_data[index])}")
