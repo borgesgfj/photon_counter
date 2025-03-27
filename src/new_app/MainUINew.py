@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import  QMainWindow
 from new_app.constants import Color_List, Widget_Layout,MeasurementType
 from new_app.NewGraph import RealTimeGraphsWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QStackedLayout, QGridLayout,QFormLayout
-from PyQt5.QtWidgets import  QWidget, QComboBox, QGroupBox, QCheckBox,QPushButton, QLineEdit,QDoubleSpinBox
+from PyQt5.QtWidgets import  QWidget, QComboBox, QGroupBox, QCheckBox,QPushButton, QLineEdit,QDoubleSpinBox,QLabel
 
 
 class MainWindow(QMainWindow):
@@ -37,8 +37,17 @@ class MainWindow(QMainWindow):
         self.graph_layout = QVBoxLayout() 
         main_layout.addLayout(self.graph_layout)
         
-        self.param_layout = self._init_param_layout()
-        main_layout.addLayout(self.param_layout) 
+        
+        self.param_layout_pages = self._init_param_layout()
+        
+        self.param_layout_main = QVBoxLayout()
+        self.pageComboBox = QComboBox()
+        self.pageComboBox.addItem("Graph")
+        self.pageComboBox.addItem("Delay")
+        self.pageComboBox.activated.connect(self.param_layout_pages.setCurrentIndex)
+        self.param_layout_main.addWidget(self.pageComboBox)
+        self.param_layout_main.addLayout(self.param_layout_pages)
+        main_layout.addLayout(self.param_layout_main) 
         
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
@@ -160,17 +169,16 @@ class MainWindow(QMainWindow):
         #--------------------------------------------------------
         #Add save button 
         self.save_box =  QGroupBox("Save data")
+        layout =QFormLayout()        
         # Spin box to select the integration time of the save, min 0.5s max 100s step 0.5s
         self.measure_time = QDoubleSpinBox()
         self.measure_time.setRange(0.5,100) 
         self.measure_time.setSingleStep(0.5)
-        self.save_box.setMaximumHeight(100)
-        layout =QFormLayout()
-        layout =QFormLayout()
         layout.addRow("Measurement Time(s)",self.measure_time)
         self.save =QPushButton("Save")
         # self.save.clicked.connect(self.save_data)
         layout.addWidget(self.save)
+        self.save_box.setMaximumHeight(100)
         self.save_box.setLayout(layout)
         first_page_layout.addWidget(self.save_box)
         
@@ -181,6 +189,36 @@ class MainWindow(QMainWindow):
 
         param_layout_main.addWidget(first_page_widget)
 
+
+        #--------------------------------------------------------
+        #--------------------------------------------------------
+
+        #Second page 
+        #Change the delay
+
+        delay_box = QGroupBox()
+        delay_box_layout = QFormLayout()
+        self.selector_2 = QComboBox()
+        self.selector_2.addItems([str(i+1) for i in range(self.chan_number)])
+        delay_box_layout.addRow("Select Channel",self.selector_2)
+        self.delay_input = QLineEdit()
+        delay_box_layout.addRow("Input delay",self.delay_input)
+
+        button = QPushButton("Confirm")
+        # button.clicked.connect(self._add_delay)
+        delay_box_layout.addWidget(button)
+
+        self.delay_list = []
+        for i in range(self.chan_number):
+            label =QLabel()
+            delay = self.timetagger_proxy.getInputDelay(i+1)
+            label.setText(f"{delay}")
+            self.delay_list += [label]
+            delay_box_layout.addRow(f"Ch{i+1}",label)
+        delay_box.setLayout(delay_box_layout)
+
+        param_layout_main.addWidget(delay_box)
+        #--------------------------------------------------------
 
         return param_layout_main
 
