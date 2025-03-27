@@ -12,6 +12,7 @@ from new_app.NewGraph import RealTimeGraphsWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QStackedLayout, QGridLayout,QFormLayout
 from PyQt5.QtWidgets import  QWidget, QComboBox, QGroupBox, QCheckBox,QPushButton, QLineEdit,QDoubleSpinBox,QLabel
 from new_app.NewService import MeasurementRepository
+import new_app.NewBuilder as builder
 font = QtGui.QFont("Times", 20, QtGui.QFont.Bold) #font for the last value labels
 
 class MainWindow(QMainWindow):
@@ -27,6 +28,7 @@ class MainWindow(QMainWindow):
         self.timetagger_proxy= timetagger_proxy 
         self.chan_number = chan_number
         self.coincidence_channels = [] #Contait tuple of channel for coincidence ( EX : (1,3) ) 
+        self.coincidence_id_list = [] #Cointait the coincidence virtual channels from time tagger
         self.widget_list = []
         self.label_list = []
         self.repo = MeasurementRepository()
@@ -150,10 +152,10 @@ class MainWindow(QMainWindow):
         self.first_channel.setPlaceholderText("ch1-ch2,...")
         box_layout.addWidget(self.first_channel,0,0)
         add_button = QPushButton("Add")
-        # add_button.clicked.connect(self._add_coin)
+        add_button.clicked.connect(self._add_coincidence)
         box_layout.addWidget(add_button,0,1)
         button = QPushButton("clear")
-        # button.clicked.connect(self._clear_small_box)
+        button.clicked.connect(self._clear_coincidence_list)
         box_layout.addWidget(button,3,0)
         small_box =  QGroupBox()
         self.small_box_layout = QHBoxLayout()
@@ -226,6 +228,29 @@ class MainWindow(QMainWindow):
 
         return param_layout_main
 
+    def _add_coincidence(self):
+        try:
+            text = self.first_channel.text()
+            slip1 = text.split(",")
+            for text  in slip1:
+                i,j= text.split("-")
+                i = int(i)
+                j = int(j)
+                if i > self.chan_number or j > self.chan_number :
+                    pass
+                else :
+                    if i !=j and [i,j] not in self.coincidence_channels and [j,i] not in self.coincidence_channels:
+                        self.coincidence_channels += [[i,j]]
+                        label = QLabel()
+                        label.setText(f"{i}-{j},")
+                        self.small_box_layout.addWidget(label)
+        except:
+           pass
+    def _clear_coincidence_list(self):
+        self.coincidence_channels = []
+        while(self.small_box_layout.count()!= 0):
+            widget = self.small_box_layout.itemAt(0).widget()
+            self.small_box_layout.removeWidget(widget)
 
     def _init_graphs_widget(self):
         self.save_box.setVisible(False)
@@ -250,7 +275,7 @@ class MainWindow(QMainWindow):
         match graph_type:
             case Widget_Layout.SINGLE_COIN.value:
                 self.single_count_graph(True)
-                self.coincidence_count_graph()
+                self.coincidence_count_graph(True)
 
     def single_count_graph(self,has_timer):
         line_setup = []
@@ -279,6 +304,34 @@ class MainWindow(QMainWindow):
         self.widget_list += [graph_widget]
         self.graph_layout.addWidget(graph_widget)
 
+    def coincidence_count_graph(self,has_timer):
+        line_setup = []
+        color_count = 0
+        self.coincidence_list = []
+        v_channel_list = []
+        label_list = []
+        for coin in self.coincidence_channels:
+            line_setup += [ GraphLineSetup(
+                            label=f"ch.{coin[0]}/{coin[1]}",
+                            symbol="s",
+                            color=Color_List[color_count])]
+            color_count += 1
+            if color_count > len(Color_List)-1: color_count = 0
+            coincidence_virtual_channel = builder.build_coincidence_virtual_channel(self.timetagger_proxy,coin)
+            self.coincidence_id_list += [coincidence_virtual_channel]
+            v_channel_list += [coincidence_virtual_channel.getChannels()[0]]
+            label = QLabel()
+            label.setFont(font)
+            key = (coincidence_virtual_channel.getChannels()[0],MeasurementType.COINCIDENCES)
+            label_list += [(label,f" ch.{coin[0]}-{coin[1]}",key)]
+            self.box_layout_last.addWidget(label)
+            self.label_list+=[label]
+        if v_channel_list != []:
+            param = CountRateReqParams(v_channel_list,self.device_serial_number,self.timetagger_proxy,
+                                        MeasurementType.COINCIDENCES)
+            widget_info = WidgetInfo("Coincidence Count",line_setup,
+                            "Count/s",Color.WHITE_PRIMARY)
 
-    def coincidence_count_graph(self):
-        pass
+            graph_widget = RealTimeGraphsWidget(widget_info,param,self.repo,label_list,has_timer)
+            self.widget_list += [graph_widget]
+            self.graph_layout.addWidget(graph_widget)

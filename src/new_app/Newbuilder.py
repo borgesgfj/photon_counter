@@ -4,7 +4,7 @@ Build the virtual channels of Time Tagger
 
 """
 import TimeTagger as TT
-from  new_app.constants import CountRateReqParams, MeasurementType
+from  new_app.constants import CountRateReqParams, MeasurementType,COINCIDENCE_WIN
 
 
 """
@@ -14,14 +14,13 @@ Build the coincidences channels
 def build_coincidence_virtual_channel(
     time_tagger_network_proxy: object,
     coincidence_channels: list[int],
-    CoinWindow
 ):
     # coincidence_channels_group = list(combinations(single_channels, 2))
 
     return TT.Coincidences(
         time_tagger_network_proxy,
         [coincidence_channels],
-        coincidenceWindow=CoinWindow,
+        coincidenceWindow=COINCIDENCE_WIN,
     )
 
 
