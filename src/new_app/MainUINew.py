@@ -8,7 +8,7 @@
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import  QMainWindow
 from new_app.constants import Color_List, Widget_Layout,MeasurementType,CountRateReqParams,WidgetInfo,Color,GraphLineSetup
-from new_app.NewGraph import RealTimeGraphsWidget
+from new_app.NewGraph import RealTimeGraphsWidget,ThreadHistoWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QStackedLayout, QGridLayout,QFormLayout
 from PyQt5.QtWidgets import  QWidget, QComboBox, QGroupBox, QCheckBox,QPushButton, QLineEdit,QDoubleSpinBox,QLabel
 from new_app.NewService import MeasurementRepository
@@ -260,6 +260,11 @@ class MainWindow(QMainWindow):
         graph_type = self.selector.currentText()
         #clear the current widget
         for widget in self.widget_list:
+            try: 
+                widget.thread.terminate()
+                widget.thread.wait()
+            except:
+                pass
             self.graph_layout.removeWidget(widget)
             widget.close()
             del widget
@@ -276,7 +281,15 @@ class MainWindow(QMainWindow):
             case Widget_Layout.SINGLE_COIN.value:
                 self.single_count_graph(True)
                 self.coincidence_count_graph(True)
-
+            case Widget_Layout.HISTOGRAM.value:
+                self.main_chan_box.setVisible(False)
+                self.histo_params.setVisible(True)
+                self.selector_histo.setVisible(True)
+                for coin in self.coincidence_channels:
+                    self.histogram_graph(coin)
+            case _ :
+                print("Not implemented yet")
+                    
     def single_count_graph(self,has_timer):
         line_setup = []
         channel_list = []
@@ -335,3 +348,54 @@ class MainWindow(QMainWindow):
             graph_widget = RealTimeGraphsWidget(widget_info,param,self.repo,label_list,has_timer)
             self.widget_list += [graph_widget]
             self.graph_layout.addWidget(graph_widget)
+
+
+    def histogram_graph(self,channels):
+        line_setup = GraphLineSetup(
+                        label=f"ch.{channels[0]}/{channels[1]}",
+                        symbol="s",
+                        color=Color.RED_PRIMARY)
+        match self.selector_histo.currentText():
+            case MeasurementType.HISTOGRAM.value:
+                histo_type =  MeasurementType.HISTOGRAM
+            case _ :
+                 histo_type =  MeasurementType.HISTOGRAM_CORR
+
+        param = CountRateReqParams(channels,self.device_serial_number,
+                                    self.timetagger_proxy,histo_type )
+        #parse the min and max maybe should be a separate function
+        try :
+            param.n_bin = int(self.n_bin_input.text())
+            param.bin_width = int(self.bin_width_input.text())
+        except Exception as error:
+            print(error)
+
+        try :
+            max_histo = int(self.max_histo.text())
+        except Exception as error:
+            max_histo = None
+
+        try :
+            min_histo = int(self.min_histo.text())
+        except Exception as error:
+            min_histo = None
+
+        if min_histo != None and max_histo != None:
+            if min_histo > max_histo:
+                c = min_histo
+                min_histo = max_histo
+                max_histo = c
+
+        self.n_bin_input.setText(f"{param.n_bin}")
+        self.bin_width_input.setText(f"{param.bin_width}")
+        histo = builder.build_histogram_measurment(param)
+        param.histogram_measurement = histo
+        widget_info = WidgetInfo("Coincidence Count",line_setup,
+                        "Count",Color.WHITE_PRIMARY,True)
+
+        label = QLabel()
+        self.box_layout_last.addWidget(label)
+        self.label_list+=[label]
+        graph_widget = ThreadHistoWidget(widget_info,param,self.repo,(label,f" ch.{channels[0]}-{channels[1]}"),min_histo,max_histo)
+        self.widget_list += [graph_widget]
+        self.graph_layout.addWidget(graph_widget)
