@@ -182,7 +182,7 @@ class MainWindow(QMainWindow):
         self.measure_time.setSingleStep(0.5)
         layout.addRow("Measurement Time(s)",self.measure_time)
         self.save =QPushButton("Save")
-        self.save.clicked.connect(self.save_to_file)
+        self.save.clicked.connect(self._save_to_file)
         layout.addWidget(self.save)
         self.save_box.setMaximumHeight(100)
         self.save_box.setLayout(layout)
@@ -254,12 +254,21 @@ class MainWindow(QMainWindow):
             widget = self.small_box_layout.itemAt(0).widget()
             self.small_box_layout.removeWidget(widget)
 
-    def save_to_file(self):
+    def _save_to_file(self):
         time =self.measure_time.value()*1E12
         with open("save_data.txt","a") as file:
             for widget in self.widget_list:
                 widget.update_plot(time)
             self.repo.save_to_file(file)
+
+    def _add_delay(self):
+        channel = self.selector_2.currentIndex()+1
+        try :
+            delay = int(self.delay_input.text())
+            self.timetagger_proxy.setInputDelay(channel,delay)
+            self.delay_list[channel-1].setText(f"{delay}")
+        except :
+            pass
 
     def _update_graphs_widget(self):
         self.save_box.setVisible(False)
