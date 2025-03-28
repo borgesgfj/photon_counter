@@ -41,6 +41,13 @@ class MeasurementRepository:
     def clear(self):
         self.measurements_per_device: dict[tuple[int, MeasurementType]] = {}
 
+    def save_to_file(self,file):
+        for key in self.measurements_per_device.keys():
+            print(key)
+            data = self.repo.get_datas(key,True)
+            file.write(f"{data[-1]},")
+        file.write("\n")
+         
 
 #Object to have the histogram use qthread
 class histo_service(QObject):

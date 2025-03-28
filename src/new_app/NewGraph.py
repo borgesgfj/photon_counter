@@ -69,11 +69,11 @@ class RealTimeGraphsWidget(QWidget):
     def _init_timer(self):
         self.timer = QtCore.QTimer()
         self.timer.setInterval(GRAPH_ANIMATION_INTERVAL)
-        self.timer.timeout.connect(self._update_plots)
+        self.timer.timeout.connect(self.update_plots)
         self.timer.start()
 
     #update the plots, either by the timer or by being called from eslewhere 
-    def _update_plots(self,time=INTEGRATION_TIME):
+    def update_plots(self,time=INTEGRATION_TIME):
         self.x_axis = self._update_x_axis_value(self.x_axis)
         if self.has_timer:
             new_data = record_measurement_data(self.param,self.repo,time)

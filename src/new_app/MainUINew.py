@@ -58,7 +58,7 @@ class MainWindow(QMainWindow):
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
 
-        self._init_graphs_widget()
+        self._update_graphs_widget()
 
 
 
@@ -74,13 +74,13 @@ class MainWindow(QMainWindow):
         items = [Widget_Layout.SINGLE_COIN.value,Widget_Layout.HISTOGRAM.value,Widget_Layout.MEASUREMENT.value]
         self.selector = QComboBox()
         self.selector.addItems(items)
-        self.selector.activated.connect(self._init_graphs_widget)
+        self.selector.activated.connect(self._update_graphs_widget)
         first_page_layout.addWidget(self.selector)
 
         #select the kind of histogram to display
         self.selector_histo = QComboBox()
         self.selector_histo.addItems([MeasurementType.HISTOGRAM.value,MeasurementType.HISTOGRAM_CORR.value])
-        self.selector_histo.activated.connect(self._init_graphs_widget)
+        self.selector_histo.activated.connect(self._update_graphs_widget)
         first_page_layout.addWidget(self.selector_histo) 
          
 
@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
                 collum =0
         line +=1
         button = QPushButton("Show Graph")
-        button.clicked.connect(self._init_graphs_widget)
+        button.clicked.connect(self._update_graphs_widget)
         box_layout.addWidget(button,line,collum)
         collum +=1
         button = QPushButton("Clear all")
@@ -136,7 +136,7 @@ class MainWindow(QMainWindow):
         layout.addRow("Max",self.max_histo)
         layout.addRow("Min",self.min_histo)
         button = QPushButton("Update")
-        button.clicked.connect(self._init_graphs_widget)
+        button.clicked.connect(self._update_graphs_widget)
         layout.addWidget(button)
         self.histo_params.setMaximumHeight(200) 
         self.histo_params.setLayout(layout)
@@ -168,7 +168,7 @@ class MainWindow(QMainWindow):
         #--------------------------------------------------------
         #Add refresh button
         refresh = QPushButton("Refresh")
-        refresh.clicked.connect(self._init_graphs_widget)
+        refresh.clicked.connect(self._update_graphs_widget)
         first_page_layout.addWidget(refresh)
         first_page_widget = QWidget()
        
@@ -182,7 +182,7 @@ class MainWindow(QMainWindow):
         self.measure_time.setSingleStep(0.5)
         layout.addRow("Measurement Time(s)",self.measure_time)
         self.save =QPushButton("Save")
-        # self.save.clicked.connect(self.save_data)
+        self.save.clicked.connect(self.save_to_file)
         layout.addWidget(self.save)
         self.save_box.setMaximumHeight(100)
         self.save_box.setLayout(layout)
@@ -227,7 +227,7 @@ class MainWindow(QMainWindow):
         #--------------------------------------------------------
 
         return param_layout_main
-
+    # Add the tuple of channels id to coincidence_channel
     def _add_coincidence(self):
         try:
             text = self.first_channel.text()
@@ -246,13 +246,22 @@ class MainWindow(QMainWindow):
                         self.small_box_layout.addWidget(label)
         except:
            pass
+    
+    # Clear coincidence_channel 
     def _clear_coincidence_list(self):
         self.coincidence_channels = []
         while(self.small_box_layout.count()!= 0):
             widget = self.small_box_layout.itemAt(0).widget()
             self.small_box_layout.removeWidget(widget)
 
-    def _init_graphs_widget(self):
+    def save_to_file(self):
+        time =self.measure_time.value()*1E12
+        with open("save_data.txt","a") as file:
+            for widget in self.widget_list:
+                widget.update_plot(time)
+            self.repo.save_to_file(file)
+
+    def _update_graphs_widget(self):
         self.save_box.setVisible(False)
         self.histo_params.setVisible(False)
         self.selector_histo.setVisible(False) 
@@ -287,6 +296,10 @@ class MainWindow(QMainWindow):
                 self.selector_histo.setVisible(True)
                 for coin in self.coincidence_channels:
                     self.histogram_graph(coin)
+            case Widget_Layout.MEASUREMENT.value:
+                self.save_box.setVisible(True)
+                self.single_count_graph(False)
+                self.coincidence_count_graph(False)
             case _ :
                 print("Not implemented yet")
                     
@@ -348,7 +361,6 @@ class MainWindow(QMainWindow):
             graph_widget = RealTimeGraphsWidget(widget_info,param,self.repo,label_list,has_timer)
             self.widget_list += [graph_widget]
             self.graph_layout.addWidget(graph_widget)
-
 
     def histogram_graph(self,channels):
         line_setup = GraphLineSetup(
